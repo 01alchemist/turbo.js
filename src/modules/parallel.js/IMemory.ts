@@ -1,6 +1,9 @@
 /**
  * Created by Nidin Vinayakan on 13/6/2016.
  */
+export interface SharedArrayBuffer extends ArrayBuffer{
+
+}
 export interface IMemory {
 
     endian:number;
