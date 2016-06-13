@@ -1,31 +1,32 @@
 import {SharedArrayBuffer} from "./IMemory";
+import {abort} from "./utils/helpers";
 /**
  * Created by Nidin Vinayakan on 13/6/2016.
  */
+let Math_abs = Math.abs;
+let Math_cos = Math.cos;
+let Math_sin = Math.sin;
+let Math_tan = Math.tan;
+let Math_acos = Math.acos;
+let Math_asin = Math.asin;
+let Math_atan = Math.atan;
+let Math_atan2 = Math.atan2;
+let Math_exp = Math.exp;
+let Math_log = Math.log;
+let Math_sqrt = Math.sqrt;
+let Math_ceil = Math.ceil;
+let Math_floor = Math.floor;
+let Math_pow = Math.pow;
+let Math_imul = Math["imul"];
+let Math_fround = Math["fround"];
+let Math_min = Math.min;
+let Math_clz32 = Math["clz32"];
+var tempI64;
+var tempDouble;
+
 export class MemoryBase {
 
-    protected Math_abs = Math.abs;
-    protected Math_cos = Math.cos;
-    protected Math_sin = Math.sin;
-    protected Math_tan = Math.tan;
-    protected Math_acos = Math.acos;
-    protected Math_asin = Math.asin;
-    protected Math_atan = Math.atan;
-    protected Math_atan2 = Math.atan2;
-    protected Math_exp = Math.exp;
-    protected Math_log = Math.log;
-    protected Math_sqrt = Math.sqrt;
-    protected Math_ceil = Math.ceil;
-    protected Math_floor = Math.floor;
-    protected Math_pow = Math.pow;
-    protected Math_imul = Math["imul"];
-    protected Math_fround = Math["fround"];
-    protected Math_min = Math.min;
-    protected Math_clz32 = Math["clz32"];
-
     protected PAGE_SIZE = 4096;
-    protected tempI64;
-    protected tempDouble;
     protected HEAP8:Int8Array;
     protected HEAP16:Int16Array;
     protected HEAP32:Int32Array;
@@ -34,8 +35,6 @@ export class MemoryBase {
     protected HEAPU32:Uint32Array;
     protected HEAPF32:Float32Array;
     protected HEAPF64:Float64Array;
-
-    protected abortDecorators = [];
 
     constructor(protected buffer:ArrayBuffer|SharedArrayBuffer, private TOTAL_STACK = 5242880, private TOTAL_MEMORY = 16777216) {
 
@@ -87,7 +86,7 @@ export class MemoryBase {
                 this.HEAP32[((ptr) >> 2)] = value;
                 break;
             case 'i64':
-                (this.tempI64 = [value >>> 0, (this.tempDouble = value, (+(Math_abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? ((Math_min((+(Math_floor((tempDouble) / 4294967296.0))), 4294967295.0)) | 0) >>> 0 : (~~((+(Math_ceil((tempDouble - +(((~~(tempDouble))) >>> 0)) / 4294967296.0))))) >>> 0) : 0)], HEAP32[((ptr) >> 2)] = tempI64[0], HEAP32[(((ptr) + (4)) >> 2)] = tempI64[1]);
+                (tempI64 = [value >>> 0, (tempDouble = value, (+(Math_abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? ((Math_min((+(Math_floor((tempDouble) / 4294967296.0))), 4294967295.0)) | 0) >>> 0 : (~~((+(Math_ceil((tempDouble - +(((~~(tempDouble))) >>> 0)) / 4294967296.0))))) >>> 0) : 0)], HEAP32[((ptr) >> 2)] = tempI64[0], HEAP32[(((ptr) + (4)) >> 2)] = tempI64[1]);
                 break;
             case 'float':
                 this.HEAPF32[((ptr) >> 2)] = value;
@@ -96,7 +95,7 @@ export class MemoryBase {
                 this.HEAPF64[((ptr) >> 3)] = value;
                 break;
             default:
-                this.abort('invalid type for setValue: ' + type);
+                abort('invalid type for setValue: ' + type);
         }
     }
 
@@ -170,27 +169,5 @@ export class MemoryBase {
         }
 
         return ret;
-    }
-
-    abort(what) {
-        if (what !== undefined) {
-            console.error(what);
-            what = JSON.stringify(what)
-        } else {
-            what = '';
-        }
-
-        ABORT = true;
-        EXITSTATUS = 1;
-
-        var extra = '';
-
-        var output = 'abort(' + what + ') at ' + stackTrace() + extra;
-        if (abortDecorators) {
-            abortDecorators.forEach(function (decorator) {
-                output = decorator(output, what);
-            });
-        }
-        throw output;
     }
 }

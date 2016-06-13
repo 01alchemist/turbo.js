@@ -1,3 +1,4 @@
+import {assert} from "./utils/helpers";
 /**
  * Created by Nidin Vinayakan on 6/13/2016.
  */
@@ -19,12 +20,12 @@ export class Runtime {
     tempI64;tempI64b;
     tempRet0;tempRet1;tempRet2;tempRet3;tempRet4;tempRet5;tempRet6;tempRet7;tempRet8;tempRet9;
 
-    STACK_ALIGN = 16;
-    GLOBAL_BASE = 8;
-    QUANTUM_SIZE = 4;
-    __dummy__;
-    funcWrappers = {};
-    functionPointers = [];
+    static STACK_ALIGN = 16;
+    static GLOBAL_BASE = 8;
+    static QUANTUM_SIZE = 4;
+    static __dummy__;
+    static funcWrappers = {};
+    static functionPointers = [];
 
     constructor() {
     }
@@ -45,7 +46,7 @@ export class Runtime {
         this.STACKTOP = stackTop;
     }
 
-    getNativeTypeSize(type) {
+    static getNativeTypeSize(type) {
         switch (type) {
             case 'i1':
             case 'i8':
@@ -75,11 +76,11 @@ export class Runtime {
         }
     }
 
-    getNativeFieldSize(type) {
+    static getNativeFieldSize(type) {
         return Math.max(Runtime.getNativeTypeSize(type), Runtime.QUANTUM_SIZE);
     }
 
-    prepVararg(ptr, type) {
+    static prepVararg(ptr, type) {
         if (type === 'double' || type === 'i64') {
             // move so the load is aligned
             if (ptr & 7) {
@@ -92,7 +93,7 @@ export class Runtime {
         return ptr;
     }
 
-    getAlignSize(type, size, vararg) {
+    static getAlignSize(type, size, vararg) {
         // we align i64s and doubles on 64-bit boundaries, unlike x86
         if (!vararg && (type == 'i64' || type == 'double')) return 8;
         if (!type) return Math.min(size, 8); // align structures internally to 64 bits
@@ -131,7 +132,7 @@ export class Runtime {
         if (!Runtime.warnOnce.shown) Runtime.warnOnce.shown = {};
         if (!Runtime.warnOnce.shown[text]) {
             Runtime.warnOnce.shown[text] = 1;
-            Module.printErr(text);
+           console.error(text);
         }
     }
 
