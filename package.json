@@ -1,0 +1,26 @@
+{
+  "name": "parallel-js",
+  "version": "1.0.0",
+  "description": "A framework for parallel javascript coding",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/01alchemist/parallel-js.git"
+  },
+  "keywords": [
+    "parallel-js",
+    "sharedarraybuffer"
+  ],
+  "author": "Nidin Vinayakan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/01alchemist/parallel-js/issues"
+  },
+  "homepage": "https://github.com/01alchemist/parallel-js",
+  "dependencies": {
+    "typescript": "^1.8.10"
+  }
+}
