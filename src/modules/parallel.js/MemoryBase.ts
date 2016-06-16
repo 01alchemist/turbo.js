@@ -1,5 +1,7 @@
 import {SharedArrayBuffer} from "./IMemory";
-import {abort} from "./utils/helpers";
+import {abort, assert} from "./utils/helpers";
+import {Runtime} from "./Runtime";
+import {Allocation} from "./Allocation";
 /**
  * Created by Nidin Vinayakan on 13/6/2016.
  */
@@ -69,7 +71,7 @@ export class MemoryBase {
         return x;
     }
 
-    setValue(ptr, value, type, noSafe) {
+    setValue(ptr, value, type, noSafe?) {
         type = type || 'i8';
         if (type.charAt(type.length - 1) === '*') type = 'i32'; // pointers are 32-bit
         switch (type) {
@@ -86,7 +88,18 @@ export class MemoryBase {
                 this.HEAP32[((ptr) >> 2)] = value;
                 break;
             case 'i64':
-                (tempI64 = [value >>> 0, (tempDouble = value, (+(Math_abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? ((Math_min((+(Math_floor((tempDouble) / 4294967296.0))), 4294967295.0)) | 0) >>> 0 : (~~((+(Math_ceil((tempDouble - +(((~~(tempDouble))) >>> 0)) / 4294967296.0))))) >>> 0) : 0)], HEAP32[((ptr) >> 2)] = tempI64[0], HEAP32[(((ptr) + (4)) >> 2)] = tempI64[1]);
+                (tempI64 = [
+                    value >>> 0,
+                    (
+                        tempDouble = value,
+                            (+(Math_abs(tempDouble))) >= 1.0 ?
+                                (tempDouble > 0.0 ?
+                                    ((Math_min((+(Math_floor((tempDouble) / 4294967296.0))), 4294967295.0)) | 0) >>> 0 :
+                                (~~((+(Math_ceil((tempDouble - +(((~~(tempDouble))) >>> 0)) / 4294967296.0))))) >>> 0) :
+                                0)
+                ],
+                    this.HEAP32[((ptr) >> 2)] = tempI64[0],
+                    this.HEAP32[(((ptr) + (4)) >> 2)] = tempI64[1]);
                 break;
             case 'float':
                 this.HEAPF32[((ptr) >> 2)] = value;
@@ -112,10 +125,12 @@ export class MemoryBase {
         var singleType = typeof types === 'string' ? types : null;
 
         var ret;
-        if (allocator == ALLOC_NONE) {
+        if (allocator == Allocation.ALLOC_NONE) {
             ret = ptr;
         } else {
-            ret = [_malloc, Runtime.stackAlloc, Runtime.staticAlloc, Runtime.dynamicAlloc][allocator === undefined ? ALLOC_STATIC : allocator](Math.max(size, singleType ? 1 : types.length));
+            ret = [_malloc, Runtime.stackAlloc, Runtime.staticAlloc, Runtime.dynamicAlloc]
+                    [allocator === undefined ? Allocation.ALLOC_STATIC : allocator]
+                        (Math.max(size, singleType ? 1 : types.length));
         }
 
         if (zeroinit) {
@@ -123,20 +138,20 @@ export class MemoryBase {
             assert((ret & 3) == 0);
             stop = ret + (size & ~3);
             for (; ptr < stop; ptr += 4) {
-                HEAP32[((ptr) >> 2)] = 0;
+                this.HEAP32[((ptr) >> 2)] = 0;
             }
             stop = ret + size;
             while (ptr < stop) {
-                HEAP8[((ptr++) >> 0)] = 0;
+                this.HEAP8[((ptr++) >> 0)] = 0;
             }
             return ret;
         }
 
         if (singleType === 'i8') {
             if (slab.subarray || slab.slice) {
-                HEAPU8.set(slab, ret);
+                this.HEAPU8.set(slab, ret);
             } else {
-                HEAPU8.set(new Uint8Array(slab), ret);
+                this.HEAPU8.set(new Uint8Array(slab), ret);
             }
             return ret;
         }
@@ -158,7 +173,7 @@ export class MemoryBase {
 
             if (type == 'i64') type = 'i32'; // special case: we have one i32 here, and one i32 later
 
-            setValue(ret + i, curr, type);
+            this.setValue(ret + i, curr, type);
 
             // no need to look up size unless type changes, so cache it
             if (previousType !== type) {

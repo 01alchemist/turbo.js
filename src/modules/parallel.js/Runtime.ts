@@ -30,20 +30,20 @@ export class Runtime {
     constructor() {
     }
 
-    setTempRet0(value) {
-        this.tempRet0 = value;
+    static setTempRet0(value) {
+        Runtime.tempRet0 = value;
     }
 
-    getTempRet0() {
-        return this.tempRet0;
+    static getTempRet0() {
+        return Runtime.tempRet0;
     }
 
-    stackSave() {
-        return this.STACKTOP;
+    static stackSave() {
+        return Runtime.STACKTOP;
     }
 
     stackRestore(stackTop) {
-        this.STACKTOP = stackTop;
+        Runtime.STACKTOP = stackTop;
     }
 
     static getNativeTypeSize(type) {
@@ -100,7 +100,7 @@ export class Runtime {
         return Math.min(size || (type ? Runtime.getNativeFieldSize(type) : 0), Runtime.QUANTUM_SIZE);
     }
 
-    dynCall(sig, ptr, args) {
+    static dynCall(sig, ptr, args) {
         if (args && args.length) {
             assert(args.length == sig.length - 1);
             if (!args.splice) args = Array.prototype.slice.call(args);
@@ -114,7 +114,7 @@ export class Runtime {
         }
     }
 
-    addFunction(func) {
+    static addFunction(func) {
         for (var i = 0; i < Runtime.functionPointers.length; i++) {
             if (!Runtime.functionPointers[i]) {
                 Runtime.functionPointers[i] = func;
@@ -124,11 +124,11 @@ export class Runtime {
         throw 'Finished up all reserved function pointers. Use a higher value for RESERVED_FUNCTION_POINTERS.';
     }
 
-    removeFunction(index) {
+    static removeFunction(index) {
         Runtime.functionPointers[(index - 2) / 2] = null;
     }
 
-    warnOnce(text) {
+    static warnOnce(text) {
         if (!Runtime.warnOnce.shown) Runtime.warnOnce.shown = {};
         if (!Runtime.warnOnce.shown[text]) {
             Runtime.warnOnce.shown[text] = 1;
@@ -136,7 +136,7 @@ export class Runtime {
         }
     }
 
-    getFuncWrapper(func, sig) {
+    static getFuncWrapper(func, sig) {
         assert(sig);
         if (!Runtime.funcWrappers[sig]) {
             Runtime.funcWrappers[sig] = {};
@@ -150,29 +150,29 @@ export class Runtime {
         return sigCache[func];
     }
 
-    stackAlloc(size) {
-        var ret = STACKTOP;
-        STACKTOP = (STACKTOP + size) | 0;
-        STACKTOP = (((STACKTOP) + 15) & -16);
-        (assert((((STACKTOP | 0) < (STACK_MAX | 0)) | 0)) | 0);
+    static stackAlloc(size) {
+        var ret = Runtime.STACKTOP;
+        Runtime.STACKTOP = (Runtime.STACKTOP + size) | 0;
+        Runtime.STACKTOP = (((Runtime.STACKTOP) + 15) & -16);
+        (assert((((Runtime.STACKTOP | 0) < (Runtime.STACK_MAX | 0)) | 0)) | 0);
         return ret;
     }
 
-    staticAlloc(size) {
-        var ret = STATICTOP;
-        STATICTOP = (STATICTOP + (assert(!staticSealed), size)) | 0;
-        STATICTOP = (((STATICTOP) + 15) & -16);
+    static staticAlloc(size) {
+        var ret = Runtime.STATICTOP;
+        Runtime.STATICTOP = (Runtime.STATICTOP + (assert(!staticSealed), size)) | 0;
+        Runtime.STATICTOP = (((Runtime.STATICTOP) + 15) & -16);
         return ret;
     }
 
-    dynamicAlloc(size) {
-        var ret = DYNAMICTOP;
-        DYNAMICTOP = (DYNAMICTOP + (assert(DYNAMICTOP > 0), size)) | 0;
-        DYNAMICTOP = (((DYNAMICTOP) + 15) & -16);
-        if (DYNAMICTOP >= TOTAL_MEMORY) {
+    static dynamicAlloc(size) {
+        var ret = Runtime.DYNAMICTOP;
+        Runtime.DYNAMICTOP = (Runtime.DYNAMICTOP + (assert(Runtime.DYNAMICTOP > 0), size)) | 0;
+        Runtime.DYNAMICTOP = (((Runtime.DYNAMICTOP) + 15) & -16);
+        if (Runtime.DYNAMICTOP >= TOTAL_MEMORY) {
             var success = enlargeMemory();
             if (!success) {
-                DYNAMICTOP = ret;
+                Runtime.DYNAMICTOP = ret;
                 return 0;
             }
         }
@@ -187,5 +187,9 @@ export class Runtime {
     static makeBigInt(low, high, unsigned) {
         var ret = (unsigned ? ((+((low >>> 0))) + ((+((high >>> 0))) * 4294967296.0)) : ((+((low >>> 0))) + ((+((high | 0))) * 4294967296.0)));
         return ret;
+    }
+
+    static getFunctionIndex(curr:any) {
+
     }
 }
