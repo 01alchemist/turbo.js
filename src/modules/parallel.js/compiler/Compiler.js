@@ -30,6 +30,8 @@ var Compiler = (function () {
             var prototype = constructor.prototype;
             source.getImplementation = function (SELF) {
             };
+            source.setImplementation = function (SELF, value) {
+            };
             for (var member in members) {
                 if (members.hasOwnProperty(member)) {
                     var value = members[members];

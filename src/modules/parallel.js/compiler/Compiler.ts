@@ -44,6 +44,10 @@ export class Compiler {
 
             };
 
+            source.setImplementation = function(SELF, value){
+
+            };
+
             for (let member in members) {
 
                 if (members.hasOwnProperty(member)) {
