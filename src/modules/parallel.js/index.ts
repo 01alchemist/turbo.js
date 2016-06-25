@@ -1,2 +1,2 @@
-export * from "IMemory";
+export * from "IDataArray";
 export * from "Memory";

@@ -1,12 +1,9 @@
 /**
  * Created by Nidin Vinayakan on 13/6/2016.
  */
-export interface SharedArrayBuffer extends ArrayBuffer{
+export interface IDataArray {
 
-}
-export interface IMemory {
-
-    endian:number;
+    endian:string;
     phyPosition:number;
     bufferOffset:number;
     position:number;
@@ -17,7 +14,7 @@ export interface IMemory {
     setBuffer(buffer:ArrayBuffer, offset:number, length:number);
     readBoolean():boolean;
     readByte():number;
-    readBytes(_bytes:IMemory, offset:number, length:number, createNewBuffer:boolean):IMemory;
+    readBytes(_bytes:IDataArray, offset:number, length:number, createNewBuffer:boolean):IDataArray;
     readDouble():number;
     readFloat():number;
     readInt():number;
@@ -35,7 +32,7 @@ export interface IMemory {
     writeBoolean(value:boolean):void;
     writeByte(value:number):void;
     writeUnsignedByte(value:number):void;
-    writeBytes(_bytes:IMemory, offset:number, length:number):void;
+    writeBytes(_bytes:IDataArray, offset:number, length:number):void;
     writeDouble(value:number):void;
     writeFloat(value:number):void;
     writeInt(value:number):void;

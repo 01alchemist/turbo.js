@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/01alchemist/parallel-js",
   "dependencies": {
+    "systemjs": "^0.19.31",
     "typescript": "^1.8.10"
   }
 }

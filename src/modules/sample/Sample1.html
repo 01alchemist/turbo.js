@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sample 1</title>
+    <script src="../../../node_modules/systemjs/dist/system.src.js"></script>
+    <script>
+        System.config({
+            packages: {
+                "../": {
+                    format: "register",
+                    defaultExtension: "js"
+                }
+            }
+        });
+        System.import("Sample1").then(function (mod) {
+            new mod.Sample1();
+        }).catch(console.log);
+    </script>
+</head>
+<body>
+</body>
+</html>
