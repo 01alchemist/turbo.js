@@ -44,12 +44,13 @@ export class Compiler {
 
             };
 
-            source.setImplementation = function (SELF, value) {
+            /*source.setImplementation = function (SELF, value) {
                 Runtime._mem_float64[(SELF + 0) >> 3] = (value.x);
                 Runtime._mem_float64[(SELF + 8) >> 3] = (value.y);
                 Runtime._mem_float64[(SELF + 16) >> 3] = (value.z);
-            };
+            };*/
 
+            let getImplementation = "function (SELF) {";
             let setImplementation = "function (SELF, value) {";
 
             for (let member in members) {
@@ -57,7 +58,8 @@ export class Compiler {
                 if (members.hasOwnProperty(member)) {
 
                     var value = members[member];
-
+                    //return DL3(_mem_float64[(SELF + 0) >> 3], _mem_float64[(SELF + 8) >> 3], _mem_float64[(SELF + 16) >> 3]);
+                    getImplementation += `Runtime._mem_${DataType[value]}[(SELF + 0) >> 3];`;
                     setImplementation += `Runtime._mem_${DataType[value]}[(SELF + 0) >> 3] = (value.${member});`;
 
                     console.log(member, members[member]);
@@ -65,6 +67,8 @@ export class Compiler {
             }
 
             setImplementation += "}";
+
+            eval("source.setImplementation=" + setImplementation);
         }
     }
 }
