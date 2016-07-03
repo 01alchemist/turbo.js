@@ -1,4 +1,5 @@
 "use strict";
+var Runtime_1 = require("../Runtime");
 var DataType_1 = require("../types/DataType");
 /**
  * Created by Nidin Vinayakan on 6/18/2016.
@@ -31,13 +32,19 @@ var Compiler = (function () {
             source.getImplementation = function (SELF) {
             };
             source.setImplementation = function (SELF, value) {
+                Runtime_1.Runtime._mem_float64[(SELF + 0) >> 3] = (value.x);
+                Runtime_1.Runtime._mem_float64[(SELF + 8) >> 3] = (value.y);
+                Runtime_1.Runtime._mem_float64[(SELF + 16) >> 3] = (value.z);
             };
+            var setImplementation = "function (SELF, value) {";
             for (var member in members) {
                 if (members.hasOwnProperty(member)) {
-                    var value = members[members];
+                    var value = members[member];
+                    setImplementation += "Runtime._mem_" + DataType_1.DataType[value] + "[(SELF + 0) >> 3] = (value." + member + ");";
                     console.log(member, members[member]);
                 }
             }
+            setImplementation += "}";
         };
     };
     return Compiler;

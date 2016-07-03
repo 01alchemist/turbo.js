@@ -7,8 +7,8 @@ export class AllTypeExample {
 
     constructor() {
 
-        var v1 = new MyVectorClass(0,0,0);
-        var v2 = new MyVectorClass(1,1,1);
+        var v1 = new MyVectorClass(0, 0, 0);
+        var v2 = new MyVectorClass(1, 1, 1);
 
         v1.temp = 43;
     }
@@ -16,10 +16,11 @@ export class AllTypeExample {
 
 @Pointer({
     type: DataType.Class,
-    members:{
-        x:DataType.float64,
-        y:DataType.float64,
-        z:DataType.float64
+    source: MyVectorClass,
+    members: {
+        x: DataType.float64,
+        y: DataType.float64,
+        z: DataType.float64
     }
 })
 class MyVectorClass {

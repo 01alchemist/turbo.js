@@ -1,6 +1,5 @@
-import {Pointer} from "../parallel.js/Pointer";
-import {float} from "../parallel.js/types";
-import {sizeof} from "../parallel.js/utils/sizeof";
+import {Pointer} from "../parallel.js/decorator/Pointer";
+import {float32, DataType, float64} from "../parallel.js/types/DataType";
 /**
  * Created by Nidin Vinayakan on 6/18/2016.
  */
@@ -17,18 +16,21 @@ export class Sample1 {
 }
 
 @Pointer({
-    size: sizeof(float) * 3,
-    allocation:{
-        x:"float",
-        y:"float",
-        z:"float"
+    type: DataType.Structure,
+    source: Vector3,
+    members: {
+        x: DataType.float64,
+        y: DataType.float64,
+        z: DataType.float64
     }
 })
-export class Vector3 {
+class Vector3 {
 
-    constructor(public x:number = 0,
-                public y:number = 0,
-                public z:number = 0) {
+    constructor(public x:float64 = 0, public y:float64 = 0, public z:float64 = 0) {
 
+    }
+
+    add(a:Vector3):Vector3 {
+        return new Vector3(this.x + a.x, this.y + a.y, this.z + a.z);
     }
 }

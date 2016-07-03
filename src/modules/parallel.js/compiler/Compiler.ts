@@ -40,24 +40,31 @@ export class Compiler {
 
             var prototype = constructor.prototype;
 
-            source.getImplementation = function(SELF){
+            source.getImplementation = function (SELF) {
 
             };
 
-            source.setImplementation = function(SELF, value){
-
+            source.setImplementation = function (SELF, value) {
+                Runtime._mem_float64[(SELF + 0) >> 3] = (value.x);
+                Runtime._mem_float64[(SELF + 8) >> 3] = (value.y);
+                Runtime._mem_float64[(SELF + 16) >> 3] = (value.z);
             };
+
+            let setImplementation = "function (SELF, value) {";
 
             for (let member in members) {
 
                 if (members.hasOwnProperty(member)) {
 
-                    var value = members[members];
+                    var value = members[member];
+
+                    setImplementation += `Runtime._mem_${DataType[value]}[(SELF + 0) >> 3] = (value.${member});`;
 
                     console.log(member, members[member]);
                 }
-
             }
+
+            setImplementation += "}";
         }
     }
 }
