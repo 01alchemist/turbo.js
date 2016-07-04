@@ -16,7 +16,6 @@ export class AllTypeExample {
 
 @Pointer({
     type: DataType.Class,
-    source: MyVectorClass,
     members: {
         x: DataType.float64,
         y: DataType.float64,
@@ -33,15 +32,5 @@ class MyVectorClass {
 
     add(a:MyVectorClass):MyVectorClass {
         return new MyVectorClass(this.x + a.x, this.y + a.y, this.z + a.z);
-    }
-}
-
-@Pointer({
-    type: DataType.Structure
-})
-class MyMatrixClass {
-
-    constructor(public x:float64, public y:float64, public z:float64) {
-
     }
 }

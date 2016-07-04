@@ -32,31 +32,38 @@ System.register(["../types/DataType"], function(exports_1, context_1) {
                     };
                 };
                 Compiler.compileStructure = function (_a) {
-                    var type = _a.type, source = _a.source, members = _a.members;
+                    var type = _a.type, members = _a.members;
                     return function (constructor) {
                         console.log(DataType_1.DataType[type]);
                         console.log(constructor.toString());
                         var prototype = constructor.prototype;
-                        source.getImplementation = function (SELF) {
+                        constructor.getImplementation = function (SELF) {
+                            console.log("getImplementation");
                         };
                         /*source.setImplementation = function (SELF, value) {
                             Runtime._mem_float64[(SELF + 0) >> 3] = (value.x);
                             Runtime._mem_float64[(SELF + 8) >> 3] = (value.y);
                             Runtime._mem_float64[(SELF + 16) >> 3] = (value.z);
                         };*/
-                        var getImplementation = "function (SELF) {";
-                        var setImplementation = "function (SELF, value) {";
-                        for (var member in members) {
+                        /*let getImplementation = "function (SELF) {";
+                        let setImplementation = "function (SELF, value) {";
+            
+                        for (let member in members) {
+            
                             if (members.hasOwnProperty(member)) {
+            
                                 var value = members[member];
                                 //return DL3(_mem_float64[(SELF + 0) >> 3], _mem_float64[(SELF + 8) >> 3], _mem_float64[(SELF + 16) >> 3]);
-                                getImplementation += "Runtime._mem_" + DataType_1.DataType[value] + "[(SELF + 0) >> 3];";
-                                setImplementation += "Runtime._mem_" + DataType_1.DataType[value] + "[(SELF + 0) >> 3] = (value." + member + ");";
+                                getImplementation += `Runtime._mem_${DataType[value]}[(SELF + 0) >> 3];`;
+                                setImplementation += `Runtime._mem_${DataType[value]}[(SELF + 0) >> 3] = (value.${member});`;
+            
                                 console.log(member, members[member]);
                             }
                         }
+            
                         setImplementation += "}";
-                        eval("source.setImplementation=" + setImplementation);
+            
+                        eval("source.setImplementation=" + setImplementation);*/
                     };
                 };
                 return Compiler;

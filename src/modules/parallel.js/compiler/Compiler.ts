@@ -32,16 +32,16 @@ export class Compiler {
         }
     }
 
-    static compileStructure({type, source, members}:{type:DataType, source:any,  members:any}) {
-        return function (constructor:Function) {
+    static compileStructure({type, members}:{type:DataType, members:any}) {
+        return function (constructor:any) {
 
             console.log(DataType[type]);
             console.log(constructor.toString());
 
             var prototype = constructor.prototype;
 
-            source.getImplementation = function (SELF) {
-
+            constructor.getImplementation = function (SELF) {
+                console.log("getImplementation");
             };
 
             /*source.setImplementation = function (SELF, value) {
@@ -50,7 +50,7 @@ export class Compiler {
                 Runtime._mem_float64[(SELF + 16) >> 3] = (value.z);
             };*/
 
-            let getImplementation = "function (SELF) {";
+            /*let getImplementation = "function (SELF) {";
             let setImplementation = "function (SELF, value) {";
 
             for (let member in members) {
@@ -68,7 +68,7 @@ export class Compiler {
 
             setImplementation += "}";
 
-            eval("source.setImplementation=" + setImplementation);
+            eval("source.setImplementation=" + setImplementation);*/
         }
     }
 }

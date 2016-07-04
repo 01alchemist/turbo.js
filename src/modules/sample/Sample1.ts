@@ -1,5 +1,6 @@
 import {Pointer} from "../parallel.js/decorator/Pointer";
 import {DataType, float64} from "../parallel.js/types/DataType";
+import {MemoryObject} from "../parallel.js/MemoryObject";
 /**
  * Created by Nidin Vinayakan on 6/18/2016.
  */
@@ -10,22 +11,22 @@ export class Sample1 {
         // Object.preventExtensions(vec3);
         // vec3.w = 0;
         console.log(vec3);
+        Vector3.get_impl();
     }
 }
 
 @Pointer({
     type: DataType.Structure,
-    source: Vector3,
     members: {
         x: DataType.float64,
         y: DataType.float64,
         z: DataType.float64
     }
 })
-class Vector3 {
+class Vector3 extends MemoryObject{
 
     constructor(public x:float64 = 0, public y:float64 = 0, public z:float64 = 0) {
-
+        super();
     }
 
     add(a:Vector3):Vector3 {
