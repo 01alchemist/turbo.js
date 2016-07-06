@@ -15,13 +15,13 @@ var SourceProvider = (function () {
         try {
             for (var _i = 0, args_1 = args; _i < args_1.length; _i++) {
                 var input_file = args_1[_i];
-                if (!(/.\.flat_[a-zA-Z0-9]+$/.test(input_file))) {
-                    throw new UsageError_1.UsageError("Bad file name (must be *.flat_<extension>): " + input_file);
+                if (!(/.\.p[js|ts]+$/.test(input_file))) {
+                    throw new UsageError_1.UsageError("Bad file name (must be *.pjs or pts): " + input_file);
                 }
                 var text = fs.readFileSync(input_file, "utf8");
                 var lines = text.split("\n");
                 var _a = this.definitionService.collectDefinitions(input_file, lines), defs = _a[0], residual = _a[1];
-                var output_file = input_file.replace(/\.flat_([a-zA-Z0-9]+)$/, ".$1");
+                var output_file = input_file.replace(/\.p([js|ts]+)$/, ".$1");
                 this.allSources.push(new Source_1.Source(input_file, output_file, defs, residual));
             }
         }
