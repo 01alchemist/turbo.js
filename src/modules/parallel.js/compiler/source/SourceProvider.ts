@@ -18,13 +18,13 @@ export class SourceProvider {
 
         try {
             for (let input_file of args) {
-                if (!(/.\.flat_[a-zA-Z0-9]+$/.test(input_file))) {
-                    throw new UsageError("Bad file name (must be *.flat_<extension>): " + input_file);
+                if (!(/.\.p[js|ts]+$/.test(input_file))) {
+                    throw new UsageError("Bad file name (must be *.pjs or pts): " + input_file);
                 }
                 let text = fs.readFileSync(input_file, "utf8");
                 let lines = text.split("\n");
                 let [defs, residual] = this.definitionService.collectDefinitions(input_file, lines);
-                let output_file = input_file.replace(/\.flat_([a-zA-Z0-9]+)$/, ".$1");
+                let output_file = input_file.replace(/\.p([js|ts]+)$/, ".$1");
                 this.allSources.push(new Source(input_file, output_file, defs, residual));
             }
         }catch (e) {
