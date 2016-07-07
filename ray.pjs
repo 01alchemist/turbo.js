@@ -54,7 +54,7 @@ function normalize(a) { var d = length(a); return DL3(a.x/d, a.y/d, a.z/d); }
 function cross(a, b) { return DL3(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x); }
 function dot(a, b) { return a.x*b.x + a.y*b.y + a.z*b.z; }
 
-@flatjs struct Vec3 {
+@turbo:: struct Vec3 {
     x: float64
     y: float64
     z: float64
@@ -70,7 +70,7 @@ function subvref(a, b) { return DL3(a.x-Vec3.x(b), a.y-Vec3.y(b), a.z-Vec3.z(b))
 function subrefref(a, b) { return DL3(Vec3.x(a)-Vec3.x(b), Vec3.y(a)-Vec3.y(b), Vec3.z(a)-Vec3.z(b)); }
 function mulrefi(a, c) { return DL3(Vec3.x(a)*c, Vec3.y(a)*c, Vec3.z(a)*c); }
 
-@flatjs struct Material {
+@turbo:: struct Material {
     diffuse:   Vec3
     specular:  Vec3
     shininess: float64
@@ -88,7 +88,7 @@ function makeMaterial(diffuse, specular, shininess, ambient, mirror) {
     return v;
 }
 
-@flatjs class Surface {
+@turbo:: class Surface {
     material: Material
 
     @method init(SELF, material) {
@@ -105,7 +105,7 @@ function makeMaterial(diffuse, specular, shininess, ambient, mirror) {
     }
 } @end
 
-@flatjs class Scene extends Surface {
+@turbo:: class Scene extends Surface {
     length: int32
     objects: Surface.Array
 
@@ -120,7 +120,7 @@ function makeMaterial(diffuse, specular, shininess, ambient, mirror) {
     }
 
     @virtual intersect(SELF, eye, ray, min, max) {
-        var min_obj = NULL;
+        var min_obj = ll.Runtime.NULL;
         var min_dist = SENTINEL;
 
         var objs = SELF.objects;
@@ -141,7 +141,7 @@ function makeMaterial(diffuse, specular, shininess, ambient, mirror) {
 
 } @end
 
-@flatjs class Sphere extends Surface {
+@turbo:: class Sphere extends Surface {
     center: Vec3
     radius: float64
 
@@ -158,7 +158,7 @@ function makeMaterial(diffuse, specular, shininess, ambient, mirror) {
         var B = dot(ray, EminusC);
         var disc = B*B - DdotD*(dot(EminusC,EminusC) - SELF.radius*SELF.radius);
         if (disc < 0.0)
-            return {obj:NULL, dist:0};
+            return {obj:ll.Runtime.NULL, dist:0};
         var s1 = (-B + Math.sqrt(disc))/DdotD;
         var s2 = (-B - Math.sqrt(disc))/DdotD;
         // Here return the smallest of s1 and s2 after filtering for _min and _max
@@ -168,7 +168,7 @@ function makeMaterial(diffuse, specular, shininess, ambient, mirror) {
             s2 = SENTINEL;
         var _dist = Math.min(s1,s2);
         if (_dist == SENTINEL)
-            return {obj:NULL, dist:0};
+            return {obj:ll.Runtime.NULL, dist:0};
         return {obj:SELF, dist:_dist};
     }
 
@@ -177,7 +177,7 @@ function makeMaterial(diffuse, specular, shininess, ambient, mirror) {
     }
 } @end
 
-@flatjs class Triangle extends Surface {
+@turbo:: class Triangle extends Surface {
     v1: Vec3
     v2: Vec3
     v3: Vec3
@@ -210,13 +210,13 @@ function makeMaterial(diffuse, specular, shininess, ambient, mirror) {
         var M = a*(e*i - h*f) + b*(g*f - d*i) + c*(d*h - e*g);
         var t = -((f*(a*k - j*b) + e*(j*c - a*l) + d*(b*l - k*c))/M);
         if (t < min || t > max)
-            return {obj:NULL,dist:0};
+            return {obj:ll.Runtime.NULL,dist:0};
         var gamma = (i*(a*k - j*b) + h*(j*c - a*l) + g*(b*l - k*c))/M;
         if (gamma < 0 || gamma > 1.0)
-            return {obj:NULL,dist:0};
+            return {obj:ll.Runtime.NULL,dist:0};
         var beta = (j*(e*i - h*f) + k*(g*f - d*i) + l*(d*h - e*g))/M;
         if (beta < 0.0 || beta > 1.0 - gamma)
-            return {obj:NULL,dist:0};
+            return {obj:ll.Runtime.NULL,dist:0};
         return {obj:SELF, dist:t};
     }
 
@@ -227,7 +227,7 @@ function makeMaterial(diffuse, specular, shininess, ambient, mirror) {
 
 } @end
 
-@flatjs class Bitmap {
+@turbo:: class Bitmap {
     data: int32.Array
     height: int32
     width: int32
@@ -290,7 +290,7 @@ const zzz = DL3(0,0,0);
 var eye = zzz;      // Eye coordinates
 var light = zzz;    // Light source coordinates
 var background = zzz; // Background color
-var world = NULL;
+var world = ll.Runtime.NULL;
 
 // Colors: http://kb.iu.edu/data/aetf.html
 
@@ -428,9 +428,9 @@ function raycolor(eye, ray, t0, t1, depth) {
         const n1 = Surface.normal(obj, p);
         const l1 = normalize(sub(light, p));
         var c = Material.ambient(m);
-        var min_obj = NULL;
+        var min_obj = ll.Runtime.NULL;
 
-        // Passing NULL here and testing for it in intersect() was intended as an optimization,
+        // Passing ll.Runtime.NULL here and testing for it in intersect() was intended as an optimization,
         // since any hit will do, but does not seem to have much of an effect in scenes tested
         // so far - maybe not enough scene detail (too few shadows).
         if (shadows) {
