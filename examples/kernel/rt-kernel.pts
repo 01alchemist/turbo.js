@@ -1,21 +1,12 @@
-// Global parameters
-
 const height = 600;
 const width = 800;
-
-// ll.Runtime setup.
-
 const RAW_MEMORY = new ArrayBuffer(height*width*4 + 65536);
 ll.Runtime.init(RAW_MEMORY, 0, RAW_MEMORY.byteLength, true);
-
-// CONFIGURATION
 
 const shadows = true;		// Compute object shadows
 const reflection = true;	// Compute object reflections
 const reflection_depth = 2;
 const antialias = false; // true;		// Antialias the image (expensive but pretty)
-
-// END CONFIGURATION
 
 const debug = false;		// Progress printout, may confuse the consumer
 
@@ -36,7 +27,7 @@ function normalize(a) { var d = length(a); return DL3(a.x/d, a.y/d, a.z/d); }
 function cross(a, b) { return DL3(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x); }
 function dot(a, b) { return a.x*b.x + a.y*b.y + a.z*b.z; }
 
-@flatjs struct Vec3 {
+@turbo:: struct Vec3 {
     x: float64
     y: float64
     z: float64
@@ -52,7 +43,7 @@ function subvref(a, b) { return DL3(a.x-Vec3.x(b), a.y-Vec3.y(b), a.z-Vec3.z(b))
 function subrefref(a, b) { return DL3(Vec3.x(a)-Vec3.x(b), Vec3.y(a)-Vec3.y(b), Vec3.z(a)-Vec3.z(b)); }
 function mulrefi(a, c) { return DL3(Vec3.x(a)*c, Vec3.y(a)*c, Vec3.z(a)*c); }
 
-@flatjs struct Material {
+@turbo:: struct Material {
     diffuse:   Vec3
     specular:  Vec3
     shininess: float64
@@ -70,7 +61,7 @@ function makeMaterial(diffuse, specular, shininess, ambient, mirror) {
     return v;
 }
 
-@flatjs class Surface {
+@turbo:: class Surface {
     material: Material
 
     @method init(SELF, material) {
@@ -87,7 +78,7 @@ function makeMaterial(diffuse, specular, shininess, ambient, mirror) {
     }
 } @end
 
-@flatjs class Scene extends Surface {
+@turbo:: class Scene extends Surface {
     length: int32
     objects: Surface.Array
 
@@ -102,7 +93,7 @@ function makeMaterial(diffuse, specular, shininess, ambient, mirror) {
     }
 
     @virtual intersect(SELF, eye, ray, min, max) {
-        var min_obj = NULL;
+        var min_obj = ll.Runtime.NULL;
         var min_dist = SENTINEL;
 
         var objs = SELF.objects;

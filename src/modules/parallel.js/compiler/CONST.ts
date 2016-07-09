@@ -24,10 +24,10 @@ export const PathOpt = "((?:\\." + Id + ")*)";
 export const PathOptLazy = "((?:\\." + Id + ")*?)";
 export const AssignOp = "(=|\\+=|-=|&=|\\|=|\\^=)(?!=)";
 
-export const start_re = new RegExp("^" + Os + "@flatjs" + Ws + "(?:struct|class)" + Ws + "(?:" + Id + ")");
+export const start_re = new RegExp("^" + Os + "@turbo::" + Ws + "(?:struct|class)" + Ws + "(?:" + Id + ")");
 export const end_re = new RegExp("^" + Rbrace + Os + "@end" + CommentOpt + "$");
-export const struct_re = new RegExp("^" + Os + "@flatjs" + Ws + "struct" + Ws + "(" + Id + ")" + Lbrace + CommentOpt + "$");
-export const class_re = new RegExp("^" + Os + "@flatjs" + Ws + "class" + Ws + "(" + Id + ")" + Os + "(?:extends" + Ws + "(" + Id + "))?" + Lbrace + CommentOpt + "$");
+export const struct_re = new RegExp("^" + Os + "@turbo::" + Ws + "struct" + Ws + "(" + Id + ")" + Lbrace + CommentOpt + "$");
+export const class_re = new RegExp("^" + Os + "@turbo::" + Ws + "class" + Ws + "(" + Id + ")" + Os + "(?:extends" + Ws + "(" + Id + "))?" + Lbrace + CommentOpt + "$");
 export const special_re = new RegExp("^" + Os + "@(get|set)" + "(" + LParen + Os + "SELF.*)$");
 export const method_re = new RegExp("^" + Os + "@(method|virtual)" + Ws + "(" + Id + ")" + "(" + LParen + Os + "SELF.*)$");
 export const blank_re = new RegExp("^" + Os + CommentOpt + "$");
