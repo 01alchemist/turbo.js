@@ -73,14 +73,14 @@ namespace ll {
 
         _idToType:any = {};
         /*
-         * Initialize the local FlatJS instance.
+         * Initialize the local Turbo instance.
          *
          * "buffer" can be an ArrayBuffer or SharedArrayBuffer.  In the
          * latter case, all workers must pass the same buffer during
          * initialization.
          *
          * The buffer must be zero-initialized before being passed to
-         * init().  FlatJS assumes ownership of the buffer, client code
+         * init().  Turbo assumes ownership of the buffer, client code
          * should not access it directly after using it to initialize
          * the heap.
          *
@@ -92,8 +92,8 @@ namespace ll {
          *
          * "initialize" must be true in exactly one agent and that call
          * must return before any agent can call any other methods on
-         * their local FlatJS objects.  Normally, you would allocate your
-         * memory in the main thread, call FlatJS.init(buffer, true) in
+         * their local Turbo objects.  Normally, you would allocate your
+         * memory in the main thread, call Turbo.init(buffer, true) in
          * the main thread, and then distribute the buffer to workers.
          */
         init(buffer, start, limit, initialize) {
@@ -123,7 +123,7 @@ namespace ll {
             } else if (buffer instanceof SharedArrayBuffer) {
                 this.alloc = alloc_sab;
             } else {
-                throw new Error("FlatJS can be initialized only on SharedArrayBuffer or ArrayBuffer");
+                throw new Error("Turbo can be initialized only on SharedArrayBuffer or ArrayBuffer");
             }
 
             this._mem_int8 = new Int8Array(buffer, start, len);
