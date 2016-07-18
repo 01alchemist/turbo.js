@@ -1,5 +1,5 @@
 {
-  "name": "parallel-js",
+  "name": "turbo.js",
   "version": "1.0.0",
   "description": "A framework for parallel javascript coding",
   "main": "src/index.js",
@@ -16,7 +16,7 @@
     "parallel-js",
     "sharedarraybuffer"
   ],
-  "author": "Nidin Vinayakan",
+  "author": "01 Alchemist",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/01alchemist/parallel-js/issues"
