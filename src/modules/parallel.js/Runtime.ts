@@ -40,7 +40,7 @@ namespace ll {
 
     MemoryError.prototype = new Error("Memory Error");
 
-    class RuntimeConstructor {
+    export class RuntimeConstructor {
 
         NULL = 0;
         int8 = {SIZE: 1, ALIGN: 1, NAME: "int8"};
