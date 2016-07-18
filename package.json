@@ -5,9 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build-bundle":"tsc -p ./src/modules/parallel.js -m system -d --outFile ./src/modules/parallel.js/bundle/parallel.js",
-    "build-runtime":"tsc ./src/modules/parallel.js/Runtime.ts -m commonjs --outDir ./src/modules/parallel.js/bundle/",
-    "build-compiler":"tsc ./src/modules/parallel.js/compiler/Compiler.ts -t ES5 -m commonjs --outDir ./src/modules/parallel.js/bundle/"
+    "build-runtime":"tsc ./src/modules/parallel.js/Runtime.ts -m commonjs -d --outDir ./src/modules/parallel.js/bundle/",
+    "build-compiler":"tsc ./src/modules/parallel.js/compiler/Compiler.ts -t ES5 -m system -d --outFile ./src/modules/parallel.js/bundle/Compiler.js"
   },
   "repository": {
     "type": "git",
