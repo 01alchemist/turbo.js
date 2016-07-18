@@ -1,6 +1,6 @@
 {
   "name": "turbo.js",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A framework for parallel javascript coding",
   "main": "src/index.js",
   "scripts": {
@@ -10,18 +10,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/01alchemist/parallel-js.git"
+    "url": "https://github.com/01alchemist/turbo.js.git"
   },
   "keywords": [
-    "parallel-js",
+    "turbo.js",
     "sharedarraybuffer"
   ],
   "author": "01 Alchemist",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/01alchemist/parallel-js/issues"
+    "url": "https://github.com/01alchemist/turbo.js/issues"
   },
-  "homepage": "https://github.com/01alchemist/parallel-js",
+  "homepage": "https://github.com/01alchemist/turbo.js",
   "dependencies": {
     "systemjs": "^0.19.31",
     "typescript": "^1.8.10",
