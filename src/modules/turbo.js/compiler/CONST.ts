@@ -1,9 +1,6 @@
-import {SMap} from "./utils/index";
-import {Defn} from "./define/Defn";
-import {ClassDefn} from "./define/ClassDefn";
-import {UserDefn} from "./define/UserDefn";
 /**
  * Created by Nidin Vinayakan on 4/7/2016.
+ *
  */
 export const Ws = "\\s+";
 export const Os = "\\s*";

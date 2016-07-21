@@ -517,7 +517,7 @@ var Compiler = (function () {
                         emitLine = d.line;
                         var signature = virtual.signature();
                         push(d.name + "." + virtual.name + " = function (SELF " + signature + ") {");
-                        push("  switch (ll.Runtime._mem_int32[SELF>>2]) {");
+                        push("  switch (turbo.Runtime._mem_int32[SELF>>2]) {");
                         var kv = virtual.reverseCases.keysValues();
                         for (var _l = kv.next(), name_2 = _l[0], cases = _l[1]; name_2; (_m = kv.next(), name_2 = _m[0], cases = _m[1], _m)) {
                             for (var _o = 0, cases_1 = cases; _o < cases_1.length; _o++) {
@@ -529,7 +529,7 @@ var Compiler = (function () {
                         push("    default:");
                         push("      " + (virtual.default_ ?
                             "return " + virtual.default_ + "(SELF " + signature + ")" :
-                            "throw ll.Runtime._badType(SELF)") + ";");
+                            "throw turbo.Runtime._badType(SELF)") + ";");
                         push("  }");
                         push("}");
                     }
@@ -537,10 +537,10 @@ var Compiler = (function () {
                 // Now do other methods: initInstance.
                 if (d.kind == DefnKind_1.DefnKind.Class) {
                     var cls = d;
-                    push(d.name + ".initInstance = function(SELF) { ll.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
+                    push(d.name + ".initInstance = function(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
                 }
                 if (d.kind == DefnKind_1.DefnKind.Class)
-                    push("ll.Runtime._idToType[" + d.classId + "] = " + d.name + ";");
+                    push("turbo.Runtime._idToType[" + d.classId + "] = " + d.name + ";");
             }
             while (k < lines.length)
                 nlines.push(lines[k++]);
@@ -660,14 +660,14 @@ var Compiler = (function () {
             switch (operation) {
                 case "get":
                     if (atomic || synchronic)
-                        expr = "Atomics.load(ll.Runtime." + mem + ", " + fieldIndex + ")";
+                        expr = "Atomics.load(turbo.Runtime." + mem + ", " + fieldIndex + ")";
                     else if (simd)
-                        expr = "SIMD." + simdType + ".load(ll.Runtime." + mem + ", " + fieldIndex + ")";
+                        expr = "SIMD." + simdType + ".load(turbo.Runtime." + mem + ", " + fieldIndex + ")";
                     else
-                        expr = "ll.Runtime." + mem + "[" + fieldIndex + "]";
+                        expr = "turbo.Runtime." + mem + "[" + fieldIndex + "]";
                     break;
                 case "notify":
-                    expr = "ll.Runtime." + CONST_1.OpAttr[operation].synchronic + "(" + ref + ")";
+                    expr = "turbo.Runtime." + CONST_1.OpAttr[operation].synchronic + "(" + ref + ")";
                     break;
                 case "set":
                 case "add":
@@ -678,20 +678,20 @@ var Compiler = (function () {
                 case "loadWhenEqual":
                 case "loadWhenNotEqual":
                     if (atomic)
-                        expr = "Atomics." + CONST_1.OpAttr[operation].atomic + "(ll.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
+                        expr = "Atomics." + CONST_1.OpAttr[operation].atomic + "(turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
                     else if (synchronic)
-                        expr = "ll.Runtime." + CONST_1.OpAttr[operation].synchronic + "(" + ref + ", ll.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
+                        expr = "turbo.Runtime." + CONST_1.OpAttr[operation].synchronic + "(" + ref + ", turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
                     else if (simd)
-                        expr = "SIMD." + simdType + ".store(ll.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
+                        expr = "SIMD." + simdType + ".store(turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
                     else
-                        expr = "ll.Runtime." + mem + "[" + ref + " >> " + shift + "] " + CONST_1.OpAttr[operation].vanilla + " " + rhs;
+                        expr = "turbo.Runtime." + mem + "[" + ref + " >> " + shift + "] " + CONST_1.OpAttr[operation].vanilla + " " + rhs;
                     break;
                 case "compareExchange":
                 case "expectUpdate":
                     if (atomic)
-                        expr = "Atomics." + CONST_1.OpAttr[operation].atomic + "(ll.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ", " + rhs2 + ")";
+                        expr = "Atomics." + CONST_1.OpAttr[operation].atomic + "(turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ", " + rhs2 + ")";
                     else
-                        expr = "ll.Runtime." + CONST_1.OpAttr[operation].synchronic + "(" + ref + ", ll.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ", " + rhs2 + ")";
+                        expr = "turbo.Runtime." + CONST_1.OpAttr[operation].synchronic + "(" + ref + ", turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ", " + rhs2 + ")";
                     break;
                 default:
                     throw new InternalError_1.InternalError("No operator: " + operation + " line: " + s);
@@ -789,7 +789,7 @@ var Compiler = (function () {
         if (!t)
             throw new ProgramError_1.ProgramError(file, line, "Unknown type argument to @new: " + baseType);
         if (!isArray) {
-            var expr_1 = "ll.Runtime.allocOrThrow(" + t.size + "," + t.align + ")";
+            var expr_1 = "turbo.Runtime.allocOrThrow(" + t.size + "," + t.align + ")";
             if (t.kind == DefnKind_1.DefnKind.Class) {
                 // NOTE, parens removed here
                 // Issue #16: Watch it: Parens interact with semicolon insertion.
@@ -804,7 +804,7 @@ var Compiler = (function () {
             throw new ProgramError_1.ProgramError(file, line, "Wrong number of arguments to @new " + baseType + ".Array");
         // NOTE, parens removed here
         // Issue #16: Watch it: Parens interact with semicolon insertion.
-        var expr = "ll.Runtime.allocOrThrow(" + t.elementSize + " * " + this.expandMacrosIn(file, line, index_1.endstrip(as[0])) + ", " + t.elementAlign + ")";
+        var expr = "turbo.Runtime.allocOrThrow(" + t.elementSize + " * " + this.expandMacrosIn(file, line, index_1.endstrip(as[0])) + ", " + t.elementAlign + ")";
         return [left + expr + s.substring(pp.where),
             left.length + expr.length];
     };

@@ -541,7 +541,7 @@ export class Compiler {
                         emitLine = d.line;
                         let signature = virtual.signature();
                         push(d.name + "." + virtual.name + " = function (SELF " + signature + ") {");
-                        push("  switch (ll.Runtime._mem_int32[SELF>>2]) {");
+                        push("  switch (turbo.Runtime._mem_int32[SELF>>2]) {");
                         let kv = virtual.reverseCases.keysValues();
                         for (let [name,cases]=kv.next(); name; [name, cases] = kv.next()) {
                             for (let c of cases)
@@ -551,7 +551,7 @@ export class Compiler {
                         push("    default:");
                         push("      " + (virtual.default_ ?
                                 `return ${virtual.default_}(SELF ${signature})` :
-                                "throw ll.Runtime._badType(SELF)") + ";");
+                                "throw turbo.Runtime._badType(SELF)") + ";");
                         push("  }");
                         push("}");
                     }
@@ -561,11 +561,11 @@ export class Compiler {
 
                 if (d.kind == DefnKind.Class) {
                     let cls = <ClassDefn> d;
-                    push(d.name + ".initInstance = function(SELF) { ll.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
+                    push(d.name + ".initInstance = function(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
                 }
 
                 if (d.kind == DefnKind.Class)
-                    push("ll.Runtime._idToType[" + (<ClassDefn> d).classId + "] = " + d.name + ";");
+                    push("turbo.Runtime._idToType[" + (<ClassDefn> d).classId + "] = " + d.name + ";");
             }
             while (k < lines.length)
                 nlines.push(lines[k++]);
@@ -697,14 +697,14 @@ export class Compiler {
             switch (operation) {
                 case "get":
                     if (atomic || synchronic)
-                        expr = `Atomics.load(ll.Runtime.${mem}, ${fieldIndex})`;
+                        expr = `Atomics.load(turbo.Runtime.${mem}, ${fieldIndex})`;
                     else if (simd)
-                        expr = `SIMD.${simdType}.load(ll.Runtime.${mem}, ${fieldIndex})`;
+                        expr = `SIMD.${simdType}.load(turbo.Runtime.${mem}, ${fieldIndex})`;
                     else
-                        expr = `ll.Runtime.${mem}[${fieldIndex}]`;
+                        expr = `turbo.Runtime.${mem}[${fieldIndex}]`;
                     break;
                 case "notify":
-                    expr = `ll.Runtime.${OpAttr[operation].synchronic}(${ref})`;
+                    expr = `turbo.Runtime.${OpAttr[operation].synchronic}(${ref})`;
                     break;
                 case "set":
                 case "add":
@@ -715,20 +715,20 @@ export class Compiler {
                 case "loadWhenEqual":
                 case "loadWhenNotEqual":
                     if (atomic)
-                        expr = `Atomics.${OpAttr[operation].atomic}(ll.Runtime.${mem}, ${fieldIndex}, ${rhs})`;
+                        expr = `Atomics.${OpAttr[operation].atomic}(turbo.Runtime.${mem}, ${fieldIndex}, ${rhs})`;
                     else if (synchronic)
-                        expr = `ll.Runtime.${OpAttr[operation].synchronic}(${ref}, ll.Runtime.${mem}, ${fieldIndex}, ${rhs})`;
+                        expr = `turbo.Runtime.${OpAttr[operation].synchronic}(${ref}, turbo.Runtime.${mem}, ${fieldIndex}, ${rhs})`;
                     else if (simd)
-                        expr = `SIMD.${simdType}.store(ll.Runtime.${mem}, ${fieldIndex}, ${rhs})`;
+                        expr = `SIMD.${simdType}.store(turbo.Runtime.${mem}, ${fieldIndex}, ${rhs})`;
                     else
-                        expr = `ll.Runtime.${mem}[${ref} >> ${shift}] ${OpAttr[operation].vanilla} ${rhs}`;
+                        expr = `turbo.Runtime.${mem}[${ref} >> ${shift}] ${OpAttr[operation].vanilla} ${rhs}`;
                     break;
                 case "compareExchange":
                 case "expectUpdate":
                     if (atomic)
-                        expr = `Atomics.${OpAttr[operation].atomic}(ll.Runtime.${mem}, ${fieldIndex}, ${rhs}, ${rhs2})`;
+                        expr = `Atomics.${OpAttr[operation].atomic}(turbo.Runtime.${mem}, ${fieldIndex}, ${rhs}, ${rhs2})`;
                     else
-                        expr = `ll.Runtime.${OpAttr[operation].synchronic}(${ref}, ll.Runtime.${mem}, ${fieldIndex}, ${rhs}, ${rhs2})`;
+                        expr = `turbo.Runtime.${OpAttr[operation].synchronic}(${ref}, turbo.Runtime.${mem}, ${fieldIndex}, ${rhs}, ${rhs2})`;
                     break;
                 default:
                     throw new InternalError("No operator: " + operation + " line: " + s);
@@ -838,7 +838,7 @@ export class Compiler {
             throw new ProgramError(file, line, "Unknown type argument to @new: " + baseType);
 
         if (!isArray) {
-            let expr = "ll.Runtime.allocOrThrow(" + t.size + "," + t.align + ")";
+            let expr = "turbo.Runtime.allocOrThrow(" + t.size + "," + t.align + ")";
             if (t.kind == DefnKind.Class) {
                 // NOTE, parens removed here
                 // Issue #16: Watch it: Parens interact with semicolon insertion.
@@ -855,7 +855,7 @@ export class Compiler {
 
         // NOTE, parens removed here
         // Issue #16: Watch it: Parens interact with semicolon insertion.
-        let expr = "ll.Runtime.allocOrThrow(" + t.elementSize + " * " + this.expandMacrosIn(file, line, endstrip(as[0])) + ", " + t.elementAlign + ")";
+        let expr = "turbo.Runtime.allocOrThrow(" + t.elementSize + " * " + this.expandMacrosIn(file, line, endstrip(as[0])) + ", " + t.elementAlign + ")";
         return [left + expr + s.substring(pp.where),
             left.length + expr.length];
     }

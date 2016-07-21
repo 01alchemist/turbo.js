@@ -32,7 +32,7 @@ if (typeof "Atomics" == "undefined") {
     };
 }
 
-namespace ll {
+namespace turbo {
 
     function MemoryError(msg) {
         this.message = msg;
