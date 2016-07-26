@@ -31,8 +31,8 @@ if (typeof "Atomics" == "undefined") {
         }
     };
 }
-var ll;
-(function (ll) {
+var turbo;
+(function (turbo) {
     function MemoryError(msg) {
         this.message = msg;
     }
@@ -306,8 +306,8 @@ var ll;
         };
         return RuntimeConstructor;
     }());
-    ll.RuntimeConstructor = RuntimeConstructor;
-    ll.Runtime = new RuntimeConstructor();
+    turbo.RuntimeConstructor = RuntimeConstructor;
+    turbo.Runtime = new RuntimeConstructor();
     // For allocators: Do not round up nbytes, for now.  References to
     // fields within structures can be to odd addresses and there's no
     // particular reason that an object can't be allocated on an odd
@@ -335,4 +335,4 @@ var ll;
         this._mem_int32[1] = top;
         return p;
     }
-})(ll || (ll = {}));
+})(turbo || (turbo = {}));

@@ -3,7 +3,7 @@
  */
 declare var Atomics: any;
 declare var SharedArrayBuffer: any;
-declare namespace ll {
+declare namespace turbo {
     class RuntimeConstructor {
         NULL: number;
         int8: {

@@ -731,6 +731,7 @@ System.register("CONST", [], function(exports_20, context_20) {
         execute: function() {
             /**
              * Created by Nidin Vinayakan on 4/7/2016.
+             *
              */
             exports_20("Ws", Ws = "\\s+");
             exports_20("Os", Os = "\\s*");
@@ -1167,13 +1168,13 @@ System.register("source/SourceProvider", ["errors/UsageError", "fs", "source/Sou
                     try {
                         for (var _i = 0, args_1 = args; _i < args_1.length; _i++) {
                             var input_file = args_1[_i];
-                            if (!(/.\.p[js|ts]+$/.test(input_file))) {
-                                throw new UsageError_1.UsageError("Bad file name (must be *.pjs or pts): " + input_file);
+                            if (!(/.\.t[js|ts]+$/.test(input_file))) {
+                                throw new UsageError_1.UsageError("Bad file name (must be *.tjs or tts): " + input_file);
                             }
                             var text = fs.readFileSync(input_file, "utf8");
                             var lines = text.split("\n");
                             var _a = this.definitionService.collectDefinitions(input_file, lines), defs = _a[0], residual = _a[1];
-                            var output_file = input_file.replace(/\.p([js|ts]+)$/, ".$1");
+                            var output_file = input_file.replace(/\.t([js|ts]+)$/, ".$1");
                             this.allSources.push(new Source_1.Source(input_file, output_file, defs, residual));
                         }
                     }
@@ -1942,7 +1943,7 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
                                     emitLine = d.line;
                                     var signature = virtual.signature();
                                     push(d.name + "." + virtual.name + " = function (SELF " + signature + ") {");
-                                    push("  switch (ll.Runtime._mem_int32[SELF>>2]) {");
+                                    push("  switch (turbo.Runtime._mem_int32[SELF>>2]) {");
                                     var kv = virtual.reverseCases.keysValues();
                                     for (var _l = kv.next(), name_3 = _l[0], cases = _l[1]; name_3; (_m = kv.next(), name_3 = _m[0], cases = _m[1], _m)) {
                                         for (var _o = 0, cases_1 = cases; _o < cases_1.length; _o++) {
@@ -1954,7 +1955,7 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
                                     push("    default:");
                                     push("      " + (virtual.default_ ?
                                         "return " + virtual.default_ + "(SELF " + signature + ")" :
-                                        "throw ll.Runtime._badType(SELF)") + ";");
+                                        "throw turbo.Runtime._badType(SELF)") + ";");
                                     push("  }");
                                     push("}");
                                 }
@@ -1962,10 +1963,10 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
                             // Now do other methods: initInstance.
                             if (d.kind == DefnKind_6.DefnKind.Class) {
                                 var cls = d;
-                                push(d.name + ".initInstance = function(SELF) { ll.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
+                                push(d.name + ".initInstance = function(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
                             }
                             if (d.kind == DefnKind_6.DefnKind.Class)
-                                push("ll.Runtime._idToType[" + d.classId + "] = " + d.name + ";");
+                                push("turbo.Runtime._idToType[" + d.classId + "] = " + d.name + ";");
                         }
                         while (k < lines.length)
                             nlines.push(lines[k++]);
@@ -2085,14 +2086,14 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
                         switch (operation) {
                             case "get":
                                 if (atomic || synchronic)
-                                    expr = "Atomics.load(ll.Runtime." + mem + ", " + fieldIndex + ")";
+                                    expr = "Atomics.load(turbo.Runtime." + mem + ", " + fieldIndex + ")";
                                 else if (simd)
-                                    expr = "SIMD." + simdType + ".load(ll.Runtime." + mem + ", " + fieldIndex + ")";
+                                    expr = "SIMD." + simdType + ".load(turbo.Runtime." + mem + ", " + fieldIndex + ")";
                                 else
-                                    expr = "ll.Runtime." + mem + "[" + fieldIndex + "]";
+                                    expr = "turbo.Runtime." + mem + "[" + fieldIndex + "]";
                                 break;
                             case "notify":
-                                expr = "ll.Runtime." + CONST_2.OpAttr[operation].synchronic + "(" + ref + ")";
+                                expr = "turbo.Runtime." + CONST_2.OpAttr[operation].synchronic + "(" + ref + ")";
                                 break;
                             case "set":
                             case "add":
@@ -2103,20 +2104,20 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
                             case "loadWhenEqual":
                             case "loadWhenNotEqual":
                                 if (atomic)
-                                    expr = "Atomics." + CONST_2.OpAttr[operation].atomic + "(ll.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
+                                    expr = "Atomics." + CONST_2.OpAttr[operation].atomic + "(turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
                                 else if (synchronic)
-                                    expr = "ll.Runtime." + CONST_2.OpAttr[operation].synchronic + "(" + ref + ", ll.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
+                                    expr = "turbo.Runtime." + CONST_2.OpAttr[operation].synchronic + "(" + ref + ", turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
                                 else if (simd)
-                                    expr = "SIMD." + simdType + ".store(ll.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
+                                    expr = "SIMD." + simdType + ".store(turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
                                 else
-                                    expr = "ll.Runtime." + mem + "[" + ref + " >> " + shift + "] " + CONST_2.OpAttr[operation].vanilla + " " + rhs;
+                                    expr = "turbo.Runtime." + mem + "[" + ref + " >> " + shift + "] " + CONST_2.OpAttr[operation].vanilla + " " + rhs;
                                 break;
                             case "compareExchange":
                             case "expectUpdate":
                                 if (atomic)
-                                    expr = "Atomics." + CONST_2.OpAttr[operation].atomic + "(ll.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ", " + rhs2 + ")";
+                                    expr = "Atomics." + CONST_2.OpAttr[operation].atomic + "(turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ", " + rhs2 + ")";
                                 else
-                                    expr = "ll.Runtime." + CONST_2.OpAttr[operation].synchronic + "(" + ref + ", ll.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ", " + rhs2 + ")";
+                                    expr = "turbo.Runtime." + CONST_2.OpAttr[operation].synchronic + "(" + ref + ", turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ", " + rhs2 + ")";
                                 break;
                             default:
                                 throw new InternalError_2.InternalError("No operator: " + operation + " line: " + s);
@@ -2214,7 +2215,7 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
                     if (!t)
                         throw new ProgramError_3.ProgramError(file, line, "Unknown type argument to @new: " + baseType);
                     if (!isArray) {
-                        var expr_1 = "ll.Runtime.allocOrThrow(" + t.size + "," + t.align + ")";
+                        var expr_1 = "turbo.Runtime.allocOrThrow(" + t.size + "," + t.align + ")";
                         if (t.kind == DefnKind_6.DefnKind.Class) {
                             // NOTE, parens removed here
                             // Issue #16: Watch it: Parens interact with semicolon insertion.
@@ -2229,7 +2230,7 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
                         throw new ProgramError_3.ProgramError(file, line, "Wrong number of arguments to @new " + baseType + ".Array");
                     // NOTE, parens removed here
                     // Issue #16: Watch it: Parens interact with semicolon insertion.
-                    var expr = "ll.Runtime.allocOrThrow(" + t.elementSize + " * " + this.expandMacrosIn(file, line, index_2.endstrip(as[0])) + ", " + t.elementAlign + ")";
+                    var expr = "turbo.Runtime.allocOrThrow(" + t.elementSize + " * " + this.expandMacrosIn(file, line, index_2.endstrip(as[0])) + ", " + t.elementAlign + ")";
                     return [left + expr + s.substring(pp.where),
                         left.length + expr.length];
                 };

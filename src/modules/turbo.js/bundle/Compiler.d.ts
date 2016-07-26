@@ -279,6 +279,7 @@ declare module "define/ClassDefn" {
 declare module "CONST" {
     /**
      * Created by Nidin Vinayakan on 4/7/2016.
+     *
      */
     export const Ws: string;
     export const Os: string;
