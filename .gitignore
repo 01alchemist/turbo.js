@@ -42,3 +42,8 @@ fabric.properties
 
 node_modules/
 /turbo.js.iml
+src/**/*.js
+!src/modules/turbo.js
+!src/modules/turbo.js/bundle/*.js
+src/**/*.js.map
+typings/
