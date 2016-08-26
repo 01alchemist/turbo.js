@@ -882,6 +882,9 @@ export class Compiler {
             // the macro may eat additional input.  So the macro should
             // be returning a new string, as well as the index at which
             // to continue the search.
+            if(text.indexOf("new ") > -1 && !this.knownTypes.test(m[1])){
+                break;
+            }
             let [newText, newStart] = macro(file, line, text, re.lastIndex - m[0].length, m);
             text = newText;
             re.lastIndex = newStart;

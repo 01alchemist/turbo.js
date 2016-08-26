@@ -3,13 +3,14 @@
  *
  */
 export const Ws = "\\s+";
+export const Lb = "\\n";
 export const Os = "\\s*";
 export const Id = "[A-Za-z][A-Za-z0-9]*"; // Note, no underscores are allowed yet
 export const Lbrace = Os + "\\{";
 export const Rbrace = Os + "\\}";
 export const LParen = Os + "\\(";
 export const CommentOpt = Os + "(?:\\/\\/.*)?";
-export const QualifierOpt = "(?:\\.(atomic|synchronic))?"
+export const QualifierOpt = "(?:\\.(atomic|synchronic))?";
 export const OpNames = "at|get|setAt|set|ref|add|sub|and|or|xor|compareExchange|loadWhenEqual|loadWhenNotEqual|expectUpdate|notify";
 export const Operation = "(?:\\.(" + OpNames + "))";
 export const OperationOpt = Operation + "?";
@@ -21,17 +22,17 @@ export const PathOpt = "((?:\\." + Id + ")*)";
 export const PathOptLazy = "((?:\\." + Id + ")*?)";
 export const AssignOp = "(=|\\+=|-=|&=|\\|=|\\^=)(?!=)";
 
-export const start_re = new RegExp("^" + Os + "@turbo::" + Ws + "(?:struct|class)" + Ws + "(?:" + Id + ")");
+export const start_re = new RegExp("^" + Os + "@turbo" + Ws + "(?:struct|class)" + Ws + "(?:" + Id + ")");
 export const end_re = new RegExp("^" + Rbrace + Os + "@end" + CommentOpt + "$");
-export const struct_re = new RegExp("^" + Os + "@turbo::" + Ws + "struct" + Ws + "(" + Id + ")" + Lbrace + CommentOpt + "$");
-export const class_re = new RegExp("^" + Os + "@turbo::" + Ws + "class" + Ws + "(" + Id + ")" + Os + "(?:extends" + Ws + "(" + Id + "))?" + Lbrace + CommentOpt + "$");
+export const struct_re = new RegExp("^" + Os + "@turbo" + Ws + "struct" + Ws + "(" + Id + ")" + Lbrace + CommentOpt + "$");
+export const class_re = new RegExp("^" + Os + "@turbo" + Ws + "class" + Ws + "(" + Id + ")" + Os + "(?:extends" + Ws + "(" + Id + "))?" + Lbrace + CommentOpt + "$");
 export const special_re = new RegExp("^" + Os + "@(get|set)" + "(" + LParen + Os + "SELF.*)$");
 export const method_re = new RegExp("^" + Os + "@(method|virtual)" + Ws + "(" + Id + ")" + "(" + LParen + Os + "SELF.*)$");
 export const blank_re = new RegExp("^" + Os + CommentOpt + "$");
 export const space_re = new RegExp("^" + Os + "$");
 export const prop_re = new RegExp("^" + Os + "(" + Id + ")" + Os + ":" + Os + "(" + Id + ")" + QualifierOpt + "(?:\.(Array))?" + Os + ";?" + CommentOpt + "$");
 
-export const new_re = new RegExp("@new\\s+(" + Id + ")" + QualifierOpt + "(?:\\.(Array)" + LParen + ")?", "g");
+export const new_re = new RegExp("new\\s+(" + Id + ")" + QualifierOpt + "(?:\\.(Array)" + LParen + ")?", "g");
 
 export const acc_re = new RegExp("(" + Id + ")" + PathOptLazy + "(?:" + Operation + "|)" + LParen, "g");
 

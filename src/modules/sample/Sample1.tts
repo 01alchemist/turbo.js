@@ -1,0 +1,51 @@
+
+@turbo class Color {
+
+    r:float32;
+    g:float32;
+    b:float32;
+
+    @method init(SELF, r,g,b) {
+        SELF.r = r;
+        SELF.g = g;
+        SELF.b = b;
+        return SELF;
+    };
+
+    @method set(SELF, r,g,b){
+        SELF.r = r;
+        SELF.g = g;
+        SELF.b = b;
+    };
+
+    @virtual intersect(SELF, eye, ray, min, max) {
+        throw "Pure: Surface.intersect"
+    };
+
+    @virtual normal(SELF, p) {
+        throw "Pure: Surface.normal"
+    };
+} @end
+
+export class Color4{
+    r:number;
+    g:number;
+    b:number;
+    a:number;
+
+    constructor(){
+
+    }
+}
+
+export class Sample1 {
+
+    constructor() {
+        var c3 = new Color(1,0,0);
+        var c4 = new Color4();
+        // var c1 = new Color(1,0,0);
+        // var c2 = new Color(0,1,0);
+        // var c3 = c1 + c2;
+        // console.log(c3);
+    }
+}

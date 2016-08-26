@@ -1,0 +1,1 @@
+call node lib/tc.js %1
