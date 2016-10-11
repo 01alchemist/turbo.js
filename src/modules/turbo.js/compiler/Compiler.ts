@@ -33,17 +33,27 @@ export class Compiler {
 
     static VERSION = "1.0.0";
 
+    static includes: string = [
+        `export class MemoryObject {`,
+        `   private _pointer:number;`,
+        `   get pointer():number { return this._pointer; };`,
+        `   constructor(p:number){`,
+        `       this._pointer = (p | 0);`,
+        `   }`,
+        `}`].join('\n');
+
+
     private knownTypes = new SMap<Defn>();
     private knownIds = new SMap<ClassDefn>();
-    private userTypes:UserDefn[] = [];
+    private userTypes: UserDefn[] = [];
 
-    constructor(args?:string[]) {
+    constructor(args?: string[]) {
         if (args) {
             this.compile(args);
         }
     }
 
-    compile(args:string[]) {
+    compile(args: string[]) {
         var sourceProvider = new SourceProvider(args);
 
         this.buildTypeMap(sourceProvider);
@@ -58,13 +68,13 @@ export class Compiler {
         this.expandGlobalAccessorsAndMacros(sourceProvider);
 
         for (let s of sourceProvider.allSources) {
-            fs.writeFileSync(s.output_file,
-                "// Generated from " + s.input_file + " by Parallel.js " + Compiler.VERSION + "; github.com/01alchemist/parallel-js\n" + s.allText(),
+            let header:string = "// Generated from " + s.input_file + " by turbo.js " + Compiler.VERSION + "; github.com/01alchemist/turbo-js\n";
+            fs.writeFileSync(s.output_file, header + Compiler.includes + "\n" + s.allText(),
                 "utf8");
         }
     }
 
-    buildTypeMap(sourceProvider:SourceProvider):void {
+    buildTypeMap(sourceProvider: SourceProvider): void {
         this.knownTypes.put("int8", new PrimitiveDefn("int8", 1, 1));
         this.knownTypes.put("uint8", new PrimitiveDefn("uint8", 1, 1));
         this.knownTypes.put("int16", new PrimitiveDefn("int16", 2, 2));
@@ -104,7 +114,7 @@ export class Compiler {
         }
     }
 
-    resolveTypeRefs():void {
+    resolveTypeRefs(): void {
         for (let def of this.userTypes) {
             if (def.kind == DefnKind.Class) {
                 let cls = <ClassDefn> def;
@@ -124,7 +134,7 @@ export class Compiler {
                 if (!this.knownTypes.test(prop.typeName)) {
                     throw new ProgramError(def.file, prop.line, "Undefined type: " + prop.typeName);
                 }
-                let type:Defn = null;
+                let type: Defn = null;
                 if (prop.qual != PropQual.None) {
                     if (prop.qual == PropQual.Atomic) {
                         type = this.knownTypes.get("atomic/" + prop.typeName);
@@ -144,10 +154,10 @@ export class Compiler {
         }
     }
 
-    checkRecursion():void {
+    checkRecursion(): void {
 
         // For a struct type, check that it does not include itself.
-        let checkRecursionForStruct = (def:StructDefn):void => {
+        let checkRecursionForStruct = (def: StructDefn): void => {
             if (def.checked) {
                 return;
             }
@@ -172,7 +182,7 @@ export class Compiler {
         };
 
         // For a class type, check that it does not inherit from itself.
-        let checkRecursionForClass = (def:ClassDefn):void => {
+        let checkRecursionForClass = (def: ClassDefn): void => {
             if (def.checked) {
                 return;
             }
@@ -197,7 +207,7 @@ export class Compiler {
         }
     }
 
-    checkMethods():void {
+    checkMethods(): void {
         for (let def of this.userTypes) {
             if (def.kind != DefnKind.Class) {
                 continue;
@@ -225,7 +235,7 @@ export class Compiler {
         }
     }
 
-    layoutTypes():void {
+    layoutTypes(): void {
         for (let d of this.userTypes) {
             if (d.kind == DefnKind.Class) {
                 this.layoutClass(<ClassDefn> d);
@@ -236,7 +246,7 @@ export class Compiler {
         }
     }
 
-    layoutClass(d:ClassDefn):void {
+    layoutClass(d: ClassDefn): void {
         let map = new SMap<MapEntry>();
         let size = 4;
         let align = 4;
@@ -257,18 +267,17 @@ export class Compiler {
         this.knownIds.put(idAsString, d);
     }
 
-    layoutStruct(d:UserDefn):void {
+    layoutStruct(d: UserDefn): void {
         this.layoutDefn(d, new SMap<MapEntry>(), 0, 0);
     }
 
-    layoutDefn(d:UserDefn, map:SMap<MapEntry>, size:number, align:number):void {
+    layoutDefn(d: UserDefn, map: SMap<MapEntry>, size: number, align: number): void {
         for (let p of d.props) {
             let k = p.typeRef.kind;
             if (p.isArray)
                 k = DefnKind.Class;
             switch (k) {
-                case DefnKind.Primitive:
-                {
+                case DefnKind.Primitive: {
                     let pt = <PrimitiveDefn> p.typeRef;
                     size = (size + pt.size - 1) & ~(pt.size - 1);
                     align = Math.max(align, pt.align);
@@ -276,8 +285,7 @@ export class Compiler {
                     size += pt.size;
                     break;
                 }
-                case DefnKind.Class:
-                {
+                case DefnKind.Class: {
                     // Could also be array, don't look at the contents
                     size = (size + (Defn.pointerAlign - 1)) & ~(Defn.pointerAlign - 1);
                     align = Math.max(align, Defn.pointerAlign);
@@ -285,8 +293,7 @@ export class Compiler {
                     size += Defn.pointerSize;
                     break;
                 }
-                case DefnKind.Struct:
-                {
+                case DefnKind.Struct: {
                     let st = <StructDefn> p.typeRef;
                     if (st.map == null)
                         this.layoutStruct(st);
@@ -313,7 +320,7 @@ export class Compiler {
         d.align = align;
     }
 
-    computeClassId(name:string):number {
+    computeClassId(name: string): number {
         let n = name.length;
         for (let i = 0; i < name.length; i++) {
             let c = name.charAt(i);
@@ -335,14 +342,14 @@ export class Compiler {
         return n;
     }
 
-    createVirtuals():void {
+    createVirtuals(): void {
         for (let t of this.userTypes)
             if (t.kind == DefnKind.Class)
                 this.createVirtualsFor(<ClassDefn> t);
     }
 
-    createVirtualsFor(cls:ClassDefn):void {
-        let vtable:Virtual[] = [];
+    createVirtualsFor(cls: ClassDefn): void {
+        let vtable: Virtual[] = [];
         let virts = new VirtualMethodIterator(cls);
         for (let [mname, sign, isInherited] = virts.next(); mname != ""; [mname, sign, isInherited] = virts.next()) {
             let reverseCases = new SMap<number[]>();
@@ -355,7 +362,7 @@ export class Compiler {
                     reverseCases.put(impl, []);
                 reverseCases.get(impl).push(subcls.classId);
             }
-            let def:string = null;
+            let def: string = null;
             if (isInherited && cls.baseTypeRef)
                 def = this.findMethodImplFor(cls.baseTypeRef, null, mname);
             vtable.push(new Virtual(mname, sign, reverseCases, def));
@@ -363,7 +370,7 @@ export class Compiler {
         cls.vtable = vtable;
     }
 
-    findMethodImplFor(cls:ClassDefn, stopAt:ClassDefn, name:string):string {
+    findMethodImplFor(cls: ClassDefn, stopAt: ClassDefn, name: string): string {
         if (cls == stopAt)
             return null;
         if (cls.hasMethod(name))
@@ -373,19 +380,19 @@ export class Compiler {
         throw new InternalError("Method not found: " + name);
     }
 
-    findType(name:string):Defn {
+    findType(name: string): Defn {
         if (!this.knownTypes.test(name))
             throw new InternalError("Unknown type in sizeofType: " + name);
         return this.knownTypes.get(name);
     }
 
-    expandSelfAccessors():void {
+    expandSelfAccessors(): void {
         for (var t of this.userTypes) { // ES6 required for 'let' here
             for (let m of t.methods) {
                 let body = m.body;
                 for (let k = 0; k < body.length; k++) {
                     body[k] = this.myExec(t.file, t.line, self_setter_re,
-                        (file:string, line:number, s:string, p:number, m:RegExpExecArray):[string,number] => {
+                        (file: string, line: number, s: string, p: number, m: RegExpExecArray): [string,number] => {
                             if (p > 0 && this.isSubsequent(s.charAt(p - 1))) return [s, p + m.length];
                             return this.replaceSetterShorthand(file, line, s, p, m, t);
                         },
@@ -413,33 +420,45 @@ export class Compiler {
         }
     }
 
-    linePusher(info:() => [string,number], nlines:SourceLine[]):(text:string) => void {
-        return (text:string):void => {
+    linePusher(info: () => [string,number], nlines: SourceLine[]): (text: string) => void {
+        return (text: string): void => {
             let [file,line] = info();
             nlines.push(new SourceLine(file, line, text));
         }
     }
 
-    pasteupTypes(sourceProvider:SourceProvider):void {
+    pasteupTypes(sourceProvider: SourceProvider): void {
         var emitFn = "";		// ES5 workaround - would otherwise be local to inner "for" loop
         var emitLine = 0;		// ditto
+
+
         for (let source of sourceProvider.allSources) {
             let defs = source.defs;
             let lines = source.lines;
-            let nlines:SourceLine[] = [];
+            let nlines: SourceLine[] = [];
             let k = 0;
             for (let d of defs) {
                 while (k < d.origin && k < lines.length)
                     nlines.push(lines[k++]);
 
-                let push = this.linePusher(():[string,number] => {
+                let push = this.linePusher((): [string,number] => {
                     return [emitFn, emitLine++]
                 }, nlines);
 
                 emitFn = d.file + "[class definition]";
                 emitLine = d.line;
                 if (d.kind == DefnKind.Class)
-                    push("function " + d.name + "(p) { this._pointer = (p|0); }");
+                //push("function " + d.name + "(p) { this._pointer = (p|0); }");
+                    push([
+                        `export class ${d.name} extends MemoryObject{`,
+                        `   static NAME:string;`,
+                        `   static SIZE:number;`,
+                        `   static ALIGN:number;`,
+                        `   constructor(p:number){`,
+                        `       super(p);`,
+                        `   }`,
+                        `}`].join('\n')
+                    );
                 else
                     push("function " + d.name + "() {}");
                 if (d.kind == DefnKind.Class) {
@@ -449,9 +468,11 @@ export class Compiler {
                     else
                         push("Object.defineProperty(" + d.name + ".prototype, 'pointer', { get: function () { return this._pointer } });");
                 }
+
                 push(d.name + ".NAME = \"" + d.name + "\";");
                 push(d.name + ".SIZE = " + d.size + ";");
                 push(d.name + ".ALIGN = " + d.align + ";");
+
                 if (d.kind == DefnKind.Class) {
                     let cls = <ClassDefn> d;
                     push(d.name + ".CLSID = " + cls.classId + ";");
@@ -573,23 +594,23 @@ export class Compiler {
         }
     }
 
-    expandGlobalAccessorsAndMacros(sourceProvider:SourceProvider):void {
+    expandGlobalAccessorsAndMacros(sourceProvider: SourceProvider): void {
         for (let source of sourceProvider.allSources) {
             let lines = source.lines;
-            let nlines:SourceLine[] = [];
+            let nlines: SourceLine[] = [];
             for (let l of lines)
                 nlines.push(new SourceLine(l.file, l.line, this.expandMacrosIn(l.file, l.line, l.text)));
             source.lines = nlines;
         }
     }
 
-    accMacro(file:string, line:number, s:string, p:number, ms:RegExpExecArray):[string,number] {
+    accMacro(file: string, line: number, s: string, p: number, ms: RegExpExecArray): [string,number] {
         let m = ms[0];
         let className = ms[1];
         let propName = "";
         let operation = "";
 
-        let nomatch:[string,number] = [s, p + m.length];
+        let nomatch: [string,number] = [s, p + m.length];
         let left = s.substring(0, p);
 
         if (!ms[2] && !ms[3])
@@ -603,7 +624,7 @@ export class Compiler {
             return nomatch;
 
         let offset = 0;
-        let targetType:Defn = null;
+        let targetType: Defn = null;
 
         if (propName == "") {
             if (!(ty.kind == DefnKind.Primitive || ty.kind == DefnKind.Struct))
@@ -650,9 +671,9 @@ export class Compiler {
         return this.loadFromRef(file, line, ref, targetType, s, left, operation, pp, as[1], as[2], nomatch);
     }
 
-    loadFromRef(file:string, line:number,
-                ref:string, type:Defn, s:string, left:string, operation:string, pp:ParamParser,
-                rhs:string, rhs2:string, nomatch:[string,number]):[string,number] {
+    loadFromRef(file: string, line: number,
+                ref: string, type: Defn, s: string, left: string, operation: string, pp: ParamParser,
+                rhs: string, rhs2: string, nomatch: [string,number]): [string,number] {
         let mem = "", size = 0, synchronic = false, atomic = false, simd = false, shift = -1, simdType = "";
         if (type.kind == DefnKind.Primitive) {
             let prim = <PrimitiveDefn> type;
@@ -766,13 +787,13 @@ export class Compiler {
         }
     }
 
-    arrMacro(file:string, line:number, s:string, p:number, ms:RegExpExecArray):[string,number] {
+    arrMacro(file: string, line: number, s: string, p: number, ms: RegExpExecArray): [string,number] {
         let m = ms[0];
         let typeName = ms[1];
         let qualifier = ms[2];
         let field = ms[3] ? ms[3].substring(1) : "";
         let operation = ms[4];
-        let nomatch:[string,number] = [s, p + m.length];
+        let nomatch: [string,number] = [s, p + m.length];
 
         if (operation == "get" || operation == "set")
             throw new ProgramError(file, line, "Use 'at' and 'setAt' on Arrays");
@@ -822,7 +843,7 @@ export class Compiler {
 
 // Since @new is new syntax, we throw errors for all misuse.
 
-    newMacro(file:string, line:number, s:string, p:number, ms:RegExpExecArray):[string,number] {
+    newMacro(file: string, line: number, s: string, p: number, ms: RegExpExecArray): [string,number] {
         let m = ms[0];
         let baseType = ms[1];
         let qualifier = ms[2];
@@ -860,7 +881,7 @@ export class Compiler {
             left.length + expr.length];
     }
 
-    expandMacrosIn(file:string, line:number, text:string):string {
+    expandMacrosIn(file: string, line: number, text: string): string {
         return this.myExec(
             file, line, new_re, this.newMacro.bind(this),
             this.myExec(
@@ -870,7 +891,7 @@ export class Compiler {
         );
     }
 
-    myExec(file:string, line:number, re:RegExp, macro:(fn:string, l:number, s:string, p:number, m:RegExpExecArray)=>[string,number], text:string):string {
+    myExec(file: string, line: number, re: RegExp, macro: (fn: string, l: number, s: string, p: number, m: RegExpExecArray)=>[string,number], text: string): string {
         let old = re.lastIndex;
         re.lastIndex = 0;
 
@@ -891,7 +912,7 @@ export class Compiler {
         return text;
     }
 
-    replaceSetterShorthand(file:string, line:number, s:string, p:number, ms:RegExpExecArray, t:UserDefn):[string,number] {
+    replaceSetterShorthand(file: string, line: number, s: string, p: number, ms: RegExpExecArray, t: UserDefn): [string,number] {
         //return [s, p+m.length];
         let m = ms[0];
         let path = ms[1];
@@ -907,15 +928,15 @@ export class Compiler {
             substitution_left.length];
     }
 
-    isInitial(c:string):boolean {
+    isInitial(c: string): boolean {
         return c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c == '_';
     }
 
-    isSubsequent(c:string):boolean {
+    isSubsequent(c: string): boolean {
         return c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '_';
     }
 
-    log2(x:number):number {
+    log2(x: number): number {
         if (x <= 0)
             throw new InternalError("log2: " + x);
         let i = 0;
@@ -926,7 +947,7 @@ export class Compiler {
         return i;
     }
 
-    warning(file:string, line:number, msg:string):void {
+    warning(file: string, line: number, msg: string): void {
         console.log(file + ":" + line + ": Warning: " + msg);
     }
 }

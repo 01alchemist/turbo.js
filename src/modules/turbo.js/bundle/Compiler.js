@@ -1669,41 +1669,38 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
                         if (p.isArray)
                             k = DefnKind_6.DefnKind.Class;
                         switch (k) {
-                            case DefnKind_6.DefnKind.Primitive:
-                                {
-                                    var pt = p.typeRef;
-                                    size = (size + pt.size - 1) & ~(pt.size - 1);
-                                    align = Math.max(align, pt.align);
-                                    map.put(p.name, new index_2.MapEntry(p.name, true, size, pt));
-                                    size += pt.size;
-                                    break;
+                            case DefnKind_6.DefnKind.Primitive: {
+                                var pt = p.typeRef;
+                                size = (size + pt.size - 1) & ~(pt.size - 1);
+                                align = Math.max(align, pt.align);
+                                map.put(p.name, new index_2.MapEntry(p.name, true, size, pt));
+                                size += pt.size;
+                                break;
+                            }
+                            case DefnKind_6.DefnKind.Class: {
+                                // Could also be array, don't look at the contents
+                                size = (size + (Defn_4.Defn.pointerAlign - 1)) & ~(Defn_4.Defn.pointerAlign - 1);
+                                align = Math.max(align, Defn_4.Defn.pointerAlign);
+                                map.put(p.name, new index_2.MapEntry(p.name, true, size, this.knownTypes.get(Defn_4.Defn.pointerTypeName)));
+                                size += Defn_4.Defn.pointerSize;
+                                break;
+                            }
+                            case DefnKind_6.DefnKind.Struct: {
+                                var st = p.typeRef;
+                                if (st.map == null)
+                                    this.layoutStruct(st);
+                                size = (size + st.align - 1) & ~(st.align - 1);
+                                align = Math.max(align, st.align);
+                                map.put(p.name, new index_2.MapEntry(p.name, false, size, st));
+                                var root = p.name;
+                                var mIter = st.map.values();
+                                for (var fld = mIter.next(); fld; fld = mIter.next()) {
+                                    var fldname = root + "." + fld.name;
+                                    map.put(fldname, new index_2.MapEntry(fldname, fld.expand, size + fld.offset, fld.type));
                                 }
-                            case DefnKind_6.DefnKind.Class:
-                                {
-                                    // Could also be array, don't look at the contents
-                                    size = (size + (Defn_4.Defn.pointerAlign - 1)) & ~(Defn_4.Defn.pointerAlign - 1);
-                                    align = Math.max(align, Defn_4.Defn.pointerAlign);
-                                    map.put(p.name, new index_2.MapEntry(p.name, true, size, this.knownTypes.get(Defn_4.Defn.pointerTypeName)));
-                                    size += Defn_4.Defn.pointerSize;
-                                    break;
-                                }
-                            case DefnKind_6.DefnKind.Struct:
-                                {
-                                    var st = p.typeRef;
-                                    if (st.map == null)
-                                        this.layoutStruct(st);
-                                    size = (size + st.align - 1) & ~(st.align - 1);
-                                    align = Math.max(align, st.align);
-                                    map.put(p.name, new index_2.MapEntry(p.name, false, size, st));
-                                    var root = p.name;
-                                    var mIter = st.map.values();
-                                    for (var fld = mIter.next(); fld; fld = mIter.next()) {
-                                        var fldname = root + "." + fld.name;
-                                        map.put(fldname, new index_2.MapEntry(fldname, fld.expand, size + fld.offset, fld.type));
-                                    }
-                                    size += st.size;
-                                    break;
-                                }
+                                size += st.size;
+                                break;
+                            }
                         }
                     }
                     // Struct size must be rounded up to alignment so that n*SIZE makes a valid array:
@@ -1842,7 +1839,17 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
                             emitFn = d.file + "[class definition]";
                             emitLine = d.line;
                             if (d.kind == DefnKind_6.DefnKind.Class)
-                                push("function " + d.name + "(p) { this._pointer = (p|0); }");
+                                //push("function " + d.name + "(p) { this._pointer = (p|0); }");
+                                push([
+                                    ("export class " + d.name + " {"),
+                                    "   NAME:string;",
+                                    "   SIZE:number;",
+                                    "   ALIGN:number;",
+                                    "   private _pointer:number;",
+                                    "   constructor(p:number){",
+                                    "       this._pointer = (p | 0);",
+                                    "   }",
+                                    "}"].join('\n'));
                             else
                                 push("function " + d.name + "() {}");
                             if (d.kind == DefnKind_6.DefnKind.Class) {

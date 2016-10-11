@@ -44,7 +44,8 @@ var Compiler = (function () {
         this.expandGlobalAccessorsAndMacros(sourceProvider);
         for (var _i = 0, _a = sourceProvider.allSources; _i < _a.length; _i++) {
             var s = _a[_i];
-            fs.writeFileSync(s.output_file, "// Generated from " + s.input_file + " by Parallel.js " + Compiler.VERSION + "; github.com/01alchemist/parallel-js\n" + s.allText(), "utf8");
+            var header = "// Generated from " + s.input_file + " by turbo.js " + Compiler.VERSION + "; github.com/01alchemist/turbo-js\n";
+            fs.writeFileSync(s.output_file, header + Compiler.includes + "\n" + s.allText(), "utf8");
         }
     };
     Compiler.prototype.buildTypeMap = function (sourceProvider) {
@@ -243,41 +244,38 @@ var Compiler = (function () {
             if (p.isArray)
                 k = DefnKind_1.DefnKind.Class;
             switch (k) {
-                case DefnKind_1.DefnKind.Primitive:
-                    {
-                        var pt = p.typeRef;
-                        size = (size + pt.size - 1) & ~(pt.size - 1);
-                        align = Math.max(align, pt.align);
-                        map.put(p.name, new index_1.MapEntry(p.name, true, size, pt));
-                        size += pt.size;
-                        break;
+                case DefnKind_1.DefnKind.Primitive: {
+                    var pt = p.typeRef;
+                    size = (size + pt.size - 1) & ~(pt.size - 1);
+                    align = Math.max(align, pt.align);
+                    map.put(p.name, new index_1.MapEntry(p.name, true, size, pt));
+                    size += pt.size;
+                    break;
+                }
+                case DefnKind_1.DefnKind.Class: {
+                    // Could also be array, don't look at the contents
+                    size = (size + (Defn_1.Defn.pointerAlign - 1)) & ~(Defn_1.Defn.pointerAlign - 1);
+                    align = Math.max(align, Defn_1.Defn.pointerAlign);
+                    map.put(p.name, new index_1.MapEntry(p.name, true, size, this.knownTypes.get(Defn_1.Defn.pointerTypeName)));
+                    size += Defn_1.Defn.pointerSize;
+                    break;
+                }
+                case DefnKind_1.DefnKind.Struct: {
+                    var st = p.typeRef;
+                    if (st.map == null)
+                        this.layoutStruct(st);
+                    size = (size + st.align - 1) & ~(st.align - 1);
+                    align = Math.max(align, st.align);
+                    map.put(p.name, new index_1.MapEntry(p.name, false, size, st));
+                    var root = p.name;
+                    var mIter = st.map.values();
+                    for (var fld = mIter.next(); fld; fld = mIter.next()) {
+                        var fldname = root + "." + fld.name;
+                        map.put(fldname, new index_1.MapEntry(fldname, fld.expand, size + fld.offset, fld.type));
                     }
-                case DefnKind_1.DefnKind.Class:
-                    {
-                        // Could also be array, don't look at the contents
-                        size = (size + (Defn_1.Defn.pointerAlign - 1)) & ~(Defn_1.Defn.pointerAlign - 1);
-                        align = Math.max(align, Defn_1.Defn.pointerAlign);
-                        map.put(p.name, new index_1.MapEntry(p.name, true, size, this.knownTypes.get(Defn_1.Defn.pointerTypeName)));
-                        size += Defn_1.Defn.pointerSize;
-                        break;
-                    }
-                case DefnKind_1.DefnKind.Struct:
-                    {
-                        var st = p.typeRef;
-                        if (st.map == null)
-                            this.layoutStruct(st);
-                        size = (size + st.align - 1) & ~(st.align - 1);
-                        align = Math.max(align, st.align);
-                        map.put(p.name, new index_1.MapEntry(p.name, false, size, st));
-                        var root = p.name;
-                        var mIter = st.map.values();
-                        for (var fld = mIter.next(); fld; fld = mIter.next()) {
-                            var fldname = root + "." + fld.name;
-                            map.put(fldname, new index_1.MapEntry(fldname, fld.expand, size + fld.offset, fld.type));
-                        }
-                        size += st.size;
-                        break;
-                    }
+                    size += st.size;
+                    break;
+                }
             }
         }
         // Struct size must be rounded up to alignment so that n*SIZE makes a valid array:
@@ -416,7 +414,16 @@ var Compiler = (function () {
                 emitFn = d.file + "[class definition]";
                 emitLine = d.line;
                 if (d.kind == DefnKind_1.DefnKind.Class)
-                    push("function " + d.name + "(p) { this._pointer = (p|0); }");
+                    //push("function " + d.name + "(p) { this._pointer = (p|0); }");
+                    push([
+                        ("export class " + d.name + " extends MemoryObject{"),
+                        "   static NAME:string;",
+                        "   static SIZE:number;",
+                        "   static ALIGN:number;",
+                        "   constructor(p:number){",
+                        "       super(p);",
+                        "   }",
+                        "}"].join('\n'));
                 else
                     push("function " + d.name + "() {}");
                 if (d.kind == DefnKind_1.DefnKind.Class) {
@@ -864,6 +871,14 @@ var Compiler = (function () {
         console.log(file + ":" + line + ": Warning: " + msg);
     };
     Compiler.VERSION = "1.0.0";
+    Compiler.includes = [
+        "export class MemoryObject {",
+        "   private _pointer:number;",
+        "   get pointer():number { return this._pointer; };",
+        "   constructor(p:number){",
+        "       this._pointer = (p | 0);",
+        "   }",
+        "}"].join('\n');
     return Compiler;
 }());
 exports.Compiler = Compiler;
