@@ -12,12 +12,12 @@ export class SourceProvider {
     allSources:Source[] = [];
     definitionService:DefinitionService;
 
-    constructor(args:string[]) {
+    constructor(sources:string[]) {
 
         this.definitionService = new DefinitionService;
 
         try {
-            for (let input_file of args) {
+            for (let input_file of sources) {
                 if (!(/.\.t[js|ts]+$/.test(input_file))) {
                     throw new UsageError("Bad file name (must be *.tjs or tts): " + input_file);
                 }

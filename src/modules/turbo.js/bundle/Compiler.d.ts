@@ -439,7 +439,7 @@ declare module "source/SourceProvider" {
     export class SourceProvider {
         allSources: Source[];
         definitionService: DefinitionService;
-        constructor(args: string[]);
+        constructor(sources: string[]);
     }
 }
 declare module "define/AtomicDefn" {
@@ -508,13 +508,28 @@ declare module "Compiler" {
     /**
      * Created by Nidin Vinayakan on 6/18/2016.
      */
+    export enum CompilerTarget {
+        JavaScript = 0,
+        TypeScript = 1,
+        WebAssembly = 2,
+    }
+    export interface CompilerOptions {
+        target?: CompilerTarget;
+        bundle?: boolean;
+        outDir?: string;
+    }
+    export interface CompilerArguments {
+        sources: string[];
+        options?: CompilerOptions;
+    }
     export class Compiler {
         static VERSION: string;
+        static includes: string;
         private knownTypes;
         private knownIds;
         private userTypes;
-        constructor(args?: string[]);
-        compile(args: string[]): void;
+        constructor(args?: CompilerArguments);
+        compile(args: CompilerArguments): void;
         buildTypeMap(sourceProvider: SourceProvider): void;
         resolveTypeRefs(): void;
         checkRecursion(): void;

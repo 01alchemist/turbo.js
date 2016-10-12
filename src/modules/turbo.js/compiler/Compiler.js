@@ -22,6 +22,12 @@ var PrimKind_1 = require("./kind/PrimKind");
 /**
  * Created by Nidin Vinayakan on 6/18/2016.
  */
+(function (CompilerTarget) {
+    CompilerTarget[CompilerTarget["JavaScript"] = 0] = "JavaScript";
+    CompilerTarget[CompilerTarget["TypeScript"] = 1] = "TypeScript";
+    CompilerTarget[CompilerTarget["WebAssembly"] = 2] = "WebAssembly";
+})(exports.CompilerTarget || (exports.CompilerTarget = {}));
+var CompilerTarget = exports.CompilerTarget;
 var Compiler = (function () {
     function Compiler(args) {
         this.knownTypes = new index_1.SMap();
@@ -32,7 +38,11 @@ var Compiler = (function () {
         }
     }
     Compiler.prototype.compile = function (args) {
-        var sourceProvider = new SourceProvider_1.SourceProvider(args);
+        if (args.options.bundle && !args.options.outDir) {
+            console.info("CompilerInfo: outDir not defined, using ./ !");
+            args.options.outDir = "./";
+        }
+        var sourceProvider = new SourceProvider_1.SourceProvider(args.sources);
         this.buildTypeMap(sourceProvider);
         this.resolveTypeRefs();
         this.checkRecursion();
@@ -42,10 +52,24 @@ var Compiler = (function () {
         this.expandSelfAccessors();
         this.pasteupTypes(sourceProvider);
         this.expandGlobalAccessorsAndMacros(sourceProvider);
+        var bundle = "//turbo.js bundle\n" + Compiler.includes + "\n";
         for (var _i = 0, _a = sourceProvider.allSources; _i < _a.length; _i++) {
             var s = _a[_i];
-            var header = "// Generated from " + s.input_file + " by turbo.js " + Compiler.VERSION + "; github.com/01alchemist/turbo-js\n";
-            fs.writeFileSync(s.output_file, header + Compiler.includes + "\n" + s.allText(), "utf8");
+            var header = "// Generated from " + s.input_file + " by turbo.js " +
+                Compiler.VERSION + "; github.com/01alchemist/turbo.js\n";
+            if (args.options.bundle) {
+                bundle += header + "\n" + s.allText() + "\n";
+            }
+            else {
+                var header_1 = "// Generated from " + s.input_file + " by turbo.js " +
+                    Compiler.VERSION + "; github.com/01alchemist/turbo.js\n";
+                fs.writeFileSync(s.output_file, header_1 + "\n" + s.allText(), "utf8");
+            }
+        }
+        if (args.options.bundle) {
+            var outDir = args.options.outDir;
+            outDir = outDir.substr(outDir.length - 2, 1) === "/" ? outDir : outDir + "/";
+            fs.writeFileSync(outDir + "turbo-bundle.ts", bundle, "utf8");
         }
     };
     Compiler.prototype.buildTypeMap = function (sourceProvider) {
@@ -244,38 +268,41 @@ var Compiler = (function () {
             if (p.isArray)
                 k = DefnKind_1.DefnKind.Class;
             switch (k) {
-                case DefnKind_1.DefnKind.Primitive: {
-                    var pt = p.typeRef;
-                    size = (size + pt.size - 1) & ~(pt.size - 1);
-                    align = Math.max(align, pt.align);
-                    map.put(p.name, new index_1.MapEntry(p.name, true, size, pt));
-                    size += pt.size;
-                    break;
-                }
-                case DefnKind_1.DefnKind.Class: {
-                    // Could also be array, don't look at the contents
-                    size = (size + (Defn_1.Defn.pointerAlign - 1)) & ~(Defn_1.Defn.pointerAlign - 1);
-                    align = Math.max(align, Defn_1.Defn.pointerAlign);
-                    map.put(p.name, new index_1.MapEntry(p.name, true, size, this.knownTypes.get(Defn_1.Defn.pointerTypeName)));
-                    size += Defn_1.Defn.pointerSize;
-                    break;
-                }
-                case DefnKind_1.DefnKind.Struct: {
-                    var st = p.typeRef;
-                    if (st.map == null)
-                        this.layoutStruct(st);
-                    size = (size + st.align - 1) & ~(st.align - 1);
-                    align = Math.max(align, st.align);
-                    map.put(p.name, new index_1.MapEntry(p.name, false, size, st));
-                    var root = p.name;
-                    var mIter = st.map.values();
-                    for (var fld = mIter.next(); fld; fld = mIter.next()) {
-                        var fldname = root + "." + fld.name;
-                        map.put(fldname, new index_1.MapEntry(fldname, fld.expand, size + fld.offset, fld.type));
+                case DefnKind_1.DefnKind.Primitive:
+                    {
+                        var pt = p.typeRef;
+                        size = (size + pt.size - 1) & ~(pt.size - 1);
+                        align = Math.max(align, pt.align);
+                        map.put(p.name, new index_1.MapEntry(p.name, true, size, pt));
+                        size += pt.size;
+                        break;
                     }
-                    size += st.size;
-                    break;
-                }
+                case DefnKind_1.DefnKind.Class:
+                    {
+                        // Could also be array, don't look at the contents
+                        size = (size + (Defn_1.Defn.pointerAlign - 1)) & ~(Defn_1.Defn.pointerAlign - 1);
+                        align = Math.max(align, Defn_1.Defn.pointerAlign);
+                        map.put(p.name, new index_1.MapEntry(p.name, true, size, this.knownTypes.get(Defn_1.Defn.pointerTypeName)));
+                        size += Defn_1.Defn.pointerSize;
+                        break;
+                    }
+                case DefnKind_1.DefnKind.Struct:
+                    {
+                        var st = p.typeRef;
+                        if (st.map == null)
+                            this.layoutStruct(st);
+                        size = (size + st.align - 1) & ~(st.align - 1);
+                        align = Math.max(align, st.align);
+                        map.put(p.name, new index_1.MapEntry(p.name, false, size, st));
+                        var root = p.name;
+                        var mIter = st.map.values();
+                        for (var fld = mIter.next(); fld; fld = mIter.next()) {
+                            var fldname = root + "." + fld.name;
+                            map.put(fldname, new index_1.MapEntry(fldname, fld.expand, size + fld.offset, fld.type));
+                        }
+                        size += st.size;
+                        break;
+                    }
             }
         }
         // Struct size must be rounded up to alignment so that n*SIZE makes a valid array:
@@ -420,6 +447,7 @@ var Compiler = (function () {
                         "   static NAME:string;",
                         "   static SIZE:number;",
                         "   static ALIGN:number;",
+                        "   static CLSID:number;",
                         "   constructor(p:number){",
                         "       super(p);",
                         "   }",

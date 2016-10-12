@@ -9,12 +9,12 @@ var DefinitionService_1 = require("../services/DefinitionService");
  * Created by Nidin Vinayakan on 4/7/2016.
  */
 var SourceProvider = (function () {
-    function SourceProvider(args) {
+    function SourceProvider(sources) {
         this.allSources = [];
         this.definitionService = new DefinitionService_1.DefinitionService;
         try {
-            for (var _i = 0, args_1 = args; _i < args_1.length; _i++) {
-                var input_file = args_1[_i];
+            for (var _i = 0, sources_1 = sources; _i < sources_1.length; _i++) {
+                var input_file = sources_1[_i];
                 if (!(/.\.t[js|ts]+$/.test(input_file))) {
                     throw new UsageError_1.UsageError("Bad file name (must be *.tjs or tts): " + input_file);
                 }

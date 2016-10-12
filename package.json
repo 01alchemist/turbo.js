@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build-runtime":"tsc ./src/modules/turbo.js/Runtime.ts -m commonjs -d --outDir ./src/modules/turbo.js/bundle/",
+    "watch-compiler":"tsc -w ./src/modules/turbo.js/compiler/Compiler.ts -t ES5 -m system -d --outFile ./src/modules/turbo.js/bundle/Compiler.js",
     "build-compiler":"tsc ./src/modules/turbo.js/compiler/Compiler.ts -t ES5 -m system -d --outFile ./src/modules/turbo.js/bundle/Compiler.js"
   },
   "bin":{
