@@ -1465,8 +1465,8 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
                 }
                 Compiler.prototype.compile = function (args) {
                     if (args.options.bundle && !args.options.outDir) {
-                        console.info("CompilerInfo: outDir not defined, using ./ !");
-                        args.options.outDir = "./";
+                        console.info("CompilerInfo: outDir not defined, using ./bin !");
+                        args.options.outDir = "./bin";
                     }
                     var sourceProvider = new SourceProvider_1.SourceProvider(args.sources);
                     this.buildTypeMap(sourceProvider);
@@ -1478,7 +1478,7 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
                     this.expandSelfAccessors();
                     this.pasteupTypes(sourceProvider);
                     this.expandGlobalAccessorsAndMacros(sourceProvider);
-                    var bundle = "//turbo.js bundle\n" + Compiler.includes + "\n";
+                    var bundle = "//turbo.js bundle\n";
                     for (var _i = 0, _a = sourceProvider.allSources; _i < _a.length; _i++) {
                         var s = _a[_i];
                         var header = "// Generated from " + s.input_file + " by turbo.js " +
@@ -1494,8 +1494,9 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
                     }
                     if (args.options.bundle) {
                         var outDir = args.options.outDir;
+                        var outFile = args.options.outFile || "turbo-bundle.ts";
                         outDir = outDir.substr(outDir.length - 2, 1) === "/" ? outDir : outDir + "/";
-                        fs.writeFileSync(outDir + "turbo-bundle.ts", bundle, "utf8");
+                        fs.writeFileSync(outDir + outFile, bundle, "utf8");
                     }
                 };
                 Compiler.prototype.buildTypeMap = function (sourceProvider) {

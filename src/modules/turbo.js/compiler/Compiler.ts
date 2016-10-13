@@ -17,6 +17,7 @@ import {Virtual} from "./entities/Virtual";
 import {VirtualMethodIterator} from "./iterators/VirtualMethodIterator";
 
 import fs = require("fs");
+import path = require("path");
 import {InclusiveSubclassIterator} from "./iterators/InclusiveSubclassIterator";
 import {SourceLine} from "./source/SourceLine";
 import {
@@ -37,6 +38,7 @@ export enum CompilerTarget{
 export interface CompilerOptions {
     target?:CompilerTarget;
     bundle?:boolean;
+    outFile?:string;
     outDir?:string;
 }
 export interface CompilerArguments {
@@ -71,8 +73,8 @@ export class Compiler {
     compile(args:CompilerArguments) {
 
         if (args.options.bundle && !args.options.outDir) {
-            console.info("CompilerInfo: outDir not defined, using ./ !");
-            args.options.outDir = "./";
+            console.info("CompilerInfo: outDir not defined, using ./bin !");
+            args.options.outDir = "./bin";
         }
 
         var sourceProvider = new SourceProvider(args.sources);
@@ -88,7 +90,11 @@ export class Compiler {
         this.pasteupTypes(sourceProvider);
         this.expandGlobalAccessorsAndMacros(sourceProvider);
 
-        let bundle:string = "//turbo.js bundle\n" + Compiler.includes + "\n";
+        let bundle:string = "//turbo.js bundle\n";
+
+        var dependencies = fs.readFileSync(path.resolve(__dirname, "../", "Runtime.js"));
+
+        bundle += dependencies + "\n\n";
 
         for (let s of sourceProvider.allSources) {
 
@@ -106,9 +112,10 @@ export class Compiler {
         }
 
         if (args.options.bundle) {
-            let outDir = args.options.outDir;
+            let outDir:string = args.options.outDir;
+            let outFile:string = args.options.outFile || "turbo-bundle.ts";
             outDir = outDir.substr(outDir.length - 2, 1) === "/" ? outDir : outDir + "/";
-            fs.writeFileSync(outDir + "turbo-bundle.ts", bundle, "utf8");
+            fs.writeFileSync(outDir + outFile, bundle, "utf8");
         }
     }
 

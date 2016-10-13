@@ -516,6 +516,7 @@ declare module "Compiler" {
     export interface CompilerOptions {
         target?: CompilerTarget;
         bundle?: boolean;
+        outFile?: string;
         outDir?: string;
     }
     export interface CompilerArguments {

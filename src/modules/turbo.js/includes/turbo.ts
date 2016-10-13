@@ -1,4 +1,4 @@
-export class MemoryObject {
+class MemoryObject {
    static NAME:string;
    static SIZE:number;
    static ALIGN:number;
