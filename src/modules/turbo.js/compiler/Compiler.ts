@@ -91,9 +91,9 @@ export class Compiler {
         this.expandGlobalAccessorsAndMacros(sourceProvider);
 
         let bundle:string = "//turbo.js bundle\n";
-
-        var dependencies = fs.readFileSync(path.resolve(__dirname, "../", "Runtime.js"));
-
+        
+        var dependencies = fs.readFileSync(path.resolve(__dirname, "../", "Runtime.js")).toString();
+        dependencies = dependencies.replace("//# sourceMappingURL=Runtime.js.map", "");
         bundle += dependencies + "\n\n";
 
         for (let s of sourceProvider.allSources) {

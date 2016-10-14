@@ -54,7 +54,8 @@ var Compiler = (function () {
         this.pasteupTypes(sourceProvider);
         this.expandGlobalAccessorsAndMacros(sourceProvider);
         var bundle = "//turbo.js bundle\n";
-        var dependencies = fs.readFileSync(path.resolve(__dirname, "../", "Runtime.js"));
+        var dependencies = fs.readFileSync(path.resolve(__dirname, "../", "Runtime.js")).toString();
+        dependencies = dependencies.replace("//# sourceMappingURL=Runtime.js.map", "");
         bundle += dependencies + "\n\n";
         for (var _i = 0, _a = sourceProvider.allSources; _i < _a.length; _i++) {
             var s = _a[_i];
