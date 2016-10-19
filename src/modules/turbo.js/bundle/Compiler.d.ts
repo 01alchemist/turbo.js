@@ -50,8 +50,8 @@ declare module "define/Defn" {
         size: number;
         align: number;
         constructor(name: string, kind: DefnKind);
-        elementSize: number;
-        elementAlign: number;
+        readonly elementSize: number;
+        readonly elementAlign: number;
         static pointerSize: number;
         static pointerAlign: number;
         static pointerTypeName: string;
@@ -79,7 +79,7 @@ declare module "define/PrimitiveDefn" {
         primKind: PrimKind;
         private _memory;
         constructor(name: string, size: number, align: number, primKind?: PrimKind);
-        memory: string;
+        readonly memory: string;
     }
 }
 declare module "errors/InternalError" {
@@ -102,8 +102,8 @@ declare module "utils/index" {
         offset: number;
         type: Defn;
         constructor(name: string, expand: boolean, offset: number, type: Defn);
-        memory: string;
-        size: number;
+        readonly memory: string;
+        readonly size: number;
         toString(): string;
     }
     export class SMap<T> {
@@ -270,8 +270,8 @@ declare module "define/ClassDefn" {
         subclasses: ClassDefn[];
         vtable: Virtual[];
         constructor(file: string, line: number, name: string, baseName: string, props: Prop[], methods: Method[], origin: number);
-        elementSize: number;
-        elementAlign: number;
+        readonly elementSize: number;
+        readonly elementAlign: number;
         hasMethod(name: string): boolean;
         getMethod(name: string): Method;
     }
@@ -415,7 +415,7 @@ declare module "parser/ParamParser" {
         constructor(file: string, line: number, input: string, pos: number, requireRightParen?: boolean, stopAtSemi?: boolean);
         nextArg(): string;
         allArgs(): string[];
-        where: number;
+        readonly where: number;
         cleanupArg(s: string): string;
     }
 }
@@ -525,7 +525,6 @@ declare module "Compiler" {
     }
     export class Compiler {
         static VERSION: string;
-        static includes: string;
         private knownTypes;
         private knownIds;
         private userTypes;

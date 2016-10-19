@@ -1377,10 +1377,10 @@ System.register("iterators/InclusiveSubclassIterator", [], function(exports_28, 
         }
     }
 });
-System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "utils/index", "define/Defn", "define/AtomicDefn", "define/SynchronicDefn", "define/SIMDDefn", "errors/ProgramError", "kind/DefnKind", "entities/PropQual", "kind/MethodKind", "errors/InternalError", "entities/Virtual", "iterators/VirtualMethodIterator", "fs", "iterators/InclusiveSubclassIterator", "source/SourceLine", "CONST", "parser/ParamParser", "kind/PrimKind"], function(exports_29, context_29) {
+System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "utils/index", "define/Defn", "define/AtomicDefn", "define/SynchronicDefn", "define/SIMDDefn", "errors/ProgramError", "kind/DefnKind", "entities/PropQual", "kind/MethodKind", "errors/InternalError", "entities/Virtual", "iterators/VirtualMethodIterator", "fs", "path", "iterators/InclusiveSubclassIterator", "source/SourceLine", "CONST", "parser/ParamParser", "kind/PrimKind"], function(exports_29, context_29) {
     "use strict";
     var __moduleName = context_29 && context_29.id;
-    var SourceProvider_1, PrimitiveDefn_4, index_2, Defn_4, AtomicDefn_1, SynchronicDefn_1, SIMDDefn_1, ProgramError_3, DefnKind_6, PropQual_2, MethodKind_4, InternalError_2, Virtual_1, VirtualMethodIterator_1, fs, InclusiveSubclassIterator_1, SourceLine_2, CONST_2, ParamParser_2, PrimKind_6;
+    var SourceProvider_1, PrimitiveDefn_4, index_2, Defn_4, AtomicDefn_1, SynchronicDefn_1, SIMDDefn_1, ProgramError_3, DefnKind_6, PropQual_2, MethodKind_4, InternalError_2, Virtual_1, VirtualMethodIterator_1, fs, path, InclusiveSubclassIterator_1, SourceLine_2, CONST_2, ParamParser_2, PrimKind_6;
     var CompilerTarget, Compiler;
     return {
         setters:[
@@ -1428,6 +1428,9 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
             },
             function (fs_2) {
                 fs = fs_2;
+            },
+            function (path_1) {
+                path = path_1;
             },
             function (InclusiveSubclassIterator_1_1) {
                 InclusiveSubclassIterator_1 = InclusiveSubclassIterator_1_1;
@@ -1479,6 +1482,9 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
                     this.pasteupTypes(sourceProvider);
                     this.expandGlobalAccessorsAndMacros(sourceProvider);
                     var bundle = "//turbo.js bundle\n";
+                    var dependencies = fs.readFileSync(path.resolve(__dirname, "../", "Runtime.js")).toString();
+                    dependencies = dependencies.replace("//# sourceMappingURL=Runtime.js.map", "");
+                    bundle += dependencies + "\n\n";
                     for (var _i = 0, _a = sourceProvider.allSources; _i < _a.length; _i++) {
                         var s = _a[_i];
                         var header = "// Generated from " + s.input_file + " by turbo.js " +
@@ -1867,34 +1873,31 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
                             }, nlines);
                             emitFn = d.file + "[class definition]";
                             emitLine = d.line;
-                            if (d.kind == DefnKind_6.DefnKind.Class)
-                                //push("function " + d.name + "(p) { this._pointer = (p|0); }");
+                            if (d.kind == DefnKind_6.DefnKind.Class) {
+                                var cls = d;
+                                var baseName = cls.baseName || "MemoryObject";
                                 push([
-                                    ("export class " + d.name + " extends MemoryObject{"),
-                                    "   static NAME:string;",
-                                    "   static SIZE:number;",
-                                    "   static ALIGN:number;",
-                                    "   static CLSID:number;",
+                                    ("export class " + d.name + " extends " + baseName + "{"),
+                                    ("   static NAME:string = " + d.name + ";"),
+                                    ("   static SIZE:number = " + d.size + ";"),
+                                    ("   static ALIGN:number = " + d.align + ";"),
+                                    ("   static CLSID:number = " + cls.classId + ";"),
+                                    "",
+                                    "   static get BASE():string{",
+                                    ("       return " + (cls.baseName || null)),
+                                    "   }",
+                                    "",
                                     "   constructor(p:number){",
                                     "       super(p);",
                                     "   }",
-                                    "}"].join('\n'));
-                            else
-                                push("function " + d.name + "() {}");
-                            if (d.kind == DefnKind_6.DefnKind.Class) {
-                                var cls = d;
-                                if (cls.baseName)
-                                    push(d.name + ".prototype = new " + cls.baseName + ";");
-                                else
-                                    push("Object.defineProperty(" + d.name + ".prototype, 'pointer', { get: function () { return this._pointer } });");
+                                    "",
+                                ].join('\n'));
                             }
-                            push(d.name + ".NAME = \"" + d.name + "\";");
-                            push(d.name + ".SIZE = " + d.size + ";");
-                            push(d.name + ".ALIGN = " + d.align + ";");
-                            if (d.kind == DefnKind_6.DefnKind.Class) {
-                                var cls = d;
-                                push(d.name + ".CLSID = " + cls.classId + ";");
-                                push("Object.defineProperty(" + d.name + ", 'BASE', {get: function () { return " + (cls.baseName ? cls.baseName : "null") + "; }});");
+                            else {
+                                push("function " + d.name + "() {}");
+                                push(d.name + ".NAME = \"" + d.name + "\";");
+                                push(d.name + ".SIZE = " + d.size + ";");
+                                push(d.name + ".ALIGN = " + d.align + ";");
                             }
                             // Now do methods.
                             //
@@ -1934,9 +1937,10 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
                                 while (last > 0 && /^\s*$/.test(body[last]))
                                     last--;
                                 if (last == 0)
-                                    push(d.name + "." + name_2 + " = function " + body[0]);
+                                    // push(d.name + "." + name + " = function " + body[0]);
+                                    push("    static " + name_2 + body[0]);
                                 else {
-                                    push(d.name + "." + name_2 + " = function " + body[0]);
+                                    push("    static " + name_2 + body[0]);
                                     for (var x = 1; x < last; x++)
                                         push(body[x]);
                                     push(body[last]);
@@ -1999,7 +2003,9 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
                             // Now do other methods: initInstance.
                             if (d.kind == DefnKind_6.DefnKind.Class) {
                                 var cls = d;
-                                push(d.name + ".initInstance = function(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
+                                //push(d.name + ".initInstance = function(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
+                                push("    static initInstance(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
+                                push("}");
                             }
                             if (d.kind == DefnKind_6.DefnKind.Class)
                                 push("turbo.Runtime._idToType[" + d.classId + "] = " + d.name + ";");
@@ -2326,14 +2332,6 @@ System.register("Compiler", ["source/SourceProvider", "define/PrimitiveDefn", "u
                     console.log(file + ":" + line + ": Warning: " + msg);
                 };
                 Compiler.VERSION = "1.0.0";
-                Compiler.includes = [
-                    "export class MemoryObject {",
-                    "   private _pointer:number;",
-                    "   get pointer():number { return this._pointer; };",
-                    "   constructor(p:number){",
-                    "       this._pointer = (p | 0);",
-                    "   }",
-                    "}"].join('\n');
                 return Compiler;
             }());
             exports_29("Compiler", Compiler);

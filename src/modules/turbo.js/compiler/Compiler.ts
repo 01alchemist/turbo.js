@@ -50,16 +50,6 @@ export class Compiler {
 
     static VERSION = "1.0.0";
 
-    static includes:string = [
-        `export class MemoryObject {`,
-        `   private _pointer:number;`,
-        `   get pointer():number { return this._pointer; };`,
-        `   constructor(p:number){`,
-        `       this._pointer = (p | 0);`,
-        `   }`,
-        `}`].join('\n');
-
-
     private knownTypes = new SMap<Defn>();
     private knownIds = new SMap<ClassDefn>();
     private userTypes:UserDefn[] = [];
@@ -92,9 +82,10 @@ export class Compiler {
 
         let bundle:string = "//turbo.js bundle\n";
         
-        var dependencies = fs.readFileSync(path.resolve(__dirname, "../", "Runtime.js")).toString();
-        dependencies = dependencies.replace("//# sourceMappingURL=Runtime.js.map", "");
+        var dependencies = fs.readFileSync(path.resolve(__dirname, "../", "Runtime.ts")).toString();
+        //dependencies = dependencies.replace("//# sourceMappingURL=Runtime.js.map", "");
         bundle += dependencies + "\n\n";
+        bundle += fs.readFileSync(path.resolve(__dirname, "../includes", "turbo.ts")).toString() + "\n\n";
 
         for (let s of sourceProvider.allSources) {
 
@@ -495,38 +486,34 @@ export class Compiler {
 
                 emitFn = d.file + "[class definition]";
                 emitLine = d.line;
-                if (d.kind == DefnKind.Class)
-                //push("function " + d.name + "(p) { this._pointer = (p|0); }");
+
+                if (d.kind == DefnKind.Class) {
+                    let cls = <ClassDefn> d;
+                    let baseName = cls.baseName || "MemoryObject";
                     push([
-                        `export class ${d.name} extends MemoryObject{`,
-                        `   static NAME:string;`,
-                        `   static SIZE:number;`,
-                        `   static ALIGN:number;`,
-                        `   static CLSID:number;`,
+                        `export class ${d.name} extends ${baseName}{`,
+                        `   static NAME:string = "${d.name}";`,
+                        `   static SIZE:number = ${d.size};`,
+                        `   static ALIGN:number = ${d.align};`,
+                        `   static CLSID:number = ${cls.classId};`,
+                        ``,
+                        `   static get BASE():string{`,
+                        `       return ${cls.baseName || null}`,
+                        `   }`,
+                        ``,
                         `   constructor(p:number){`,
                         `       super(p);`,
                         `   }`,
-                        `}`].join('\n')
+                        ``,
+                        ].join('\n')
                     );
-                else
+                }else {
                     push("function " + d.name + "() {}");
-                if (d.kind == DefnKind.Class) {
-                    let cls = <ClassDefn> d;
-                    if (cls.baseName)
-                        push(d.name + ".prototype = new " + cls.baseName + ";");
-                    else
-                        push("Object.defineProperty(" + d.name + ".prototype, 'pointer', { get: function () { return this._pointer } });");
+                    push(d.name + ".NAME = \"" + d.name + "\";");
+                    push(d.name + ".SIZE = " + d.size + ";");
+                    push(d.name + ".ALIGN = " + d.align + ";");
                 }
 
-                push(d.name + ".NAME = \"" + d.name + "\";");
-                push(d.name + ".SIZE = " + d.size + ";");
-                push(d.name + ".ALIGN = " + d.align + ";");
-
-                if (d.kind == DefnKind.Class) {
-                    let cls = <ClassDefn> d;
-                    push(d.name + ".CLSID = " + cls.classId + ";");
-                    push("Object.defineProperty(" + d.name + ", 'BASE', {get: function () { return " + (cls.baseName ? cls.baseName : "null") + "; }});");
-                }
 
                 // Now do methods.
                 //
@@ -566,9 +553,10 @@ export class Compiler {
                     while (last > 0 && /^\s*$/.test(body[last]))
                         last--;
                     if (last == 0)
-                        push(d.name + "." + name + " = function " + body[0]);
+                        // push(d.name + "." + name + " = function " + body[0]);
+                        push("    static " + name + body[0]);
                     else {
-                        push(d.name + "." + name + " = function " + body[0]);
+                        push("    static " + name + body[0]);
                         for (let x = 1; x < last; x++)
                             push(body[x]);
                         push(body[last]);
@@ -631,7 +619,9 @@ export class Compiler {
 
                 if (d.kind == DefnKind.Class) {
                     let cls = <ClassDefn> d;
-                    push(d.name + ".initInstance = function(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
+                    //push(d.name + ".initInstance = function(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
+                    push("    static initInstance(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
+                    push("}");
                 }
 
                 if (d.kind == DefnKind.Class)

@@ -334,7 +334,7 @@ export class RuntimeConstructor {
     }
 }
 
-var turbo = {
+export var turbo = {
     Runtime: new RuntimeConstructor()
 };
 
