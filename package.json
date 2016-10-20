@@ -1,6 +1,6 @@
 {
   "name": "turbo.js",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "A framework for parallel javascript coding",
   "main": "src/index.js",
   "scripts": {
@@ -8,8 +8,8 @@
     "build-project": "tsc -p ./src/modules/turbo.js",
     "watch-project": "tsc -w -p ./src/modules/turbo.js",
     "build-runtime": "tsc ./src/modules/turbo.js/Runtime.ts -m commonjs -d --outDir ./src/modules/turbo.js/bundle/",
-    "watch-compiler": "tsc -w ./src/modules/turbo.js/compiler/Compiler.ts -t ES5 -m system -d --outFile ./src/modules/turbo.js/bundle/Compiler.js",
-    "build-compiler": "tsc ./src/modules/turbo.js/compiler/Compiler.ts -t ES5 -m system -d --outFile ./src/modules/turbo.js/bundle/Compiler.js"
+    "watch-compiler": "tsc -w ./src/modules/turbo.js/compiler/Compiler.ts -t ES5 -m commonjs -d --outFile ./src/modules/turbo.js/bundle/Compiler.js",
+    "build-compiler": "tsc ./src/modules/turbo.js/compiler/Compiler.ts -t ES5 -m commonjs -d --outFile ./src/modules/turbo.js/bundle/Compiler.js"
   },
   "bin": {
     "turbo": "./bin/turbo"
@@ -31,9 +31,7 @@
     "url": "https://github.com/01alchemist/turbo.js/issues"
   },
   "homepage": "https://github.com/01alchemist/turbo.js",
-  "dependencies": {
-    "systemjs": "^0.19.31",
-    "typescript": "^2.0.3",
-    "typings": "^1.3.1"
+  "devDependencies": {
+    "typescript": "^2.0.3"
   }
 }

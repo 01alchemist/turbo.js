@@ -306,10 +306,10 @@ var RuntimeConstructor = (function () {
     return RuntimeConstructor;
 }());
 exports.RuntimeConstructor = RuntimeConstructor;
-var turbo = {
+exports.turbo = {
     Runtime: new RuntimeConstructor()
 };
-window["turbo"] = turbo;
+window["turbo"] = exports.turbo;
 // For allocators: Do not round up nbytes, for now.  References to
 // fields within structures can be to odd addresses and there's no
 // particular reason that an object can't be allocated on an odd
