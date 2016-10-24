@@ -1,0 +1,62 @@
+type float64 = number;
+
+@turbo class RGBA{
+
+    R:float64
+    G:float64
+    B:float64
+    A:float64
+
+    @method init(SELF:number, r,g,b,a){
+        SELF.R = r;
+        SELF.G = g;
+        SELF.B = b;
+        SELF.A = a;
+    }
+
+    static rgba(SELF:number){
+        return {
+            r:SELF.R,
+            g:SELF.G,
+            b:SELF.B,
+            a:SELF.A
+        }
+    }
+
+} //@end
+
+
+@turbo class Bitmap{
+
+    Width:int32
+    Height:int32
+    length:int32
+    data:RGBA.Array
+
+    @method init(SELF, width:number, height:number){
+        
+        SELF.data = @new RGBA.Array(2 * 2);
+        return SELF;
+    }
+
+    static NewBitmap(){
+        return Bitmap.init(@new Bitmap);
+    }
+
+    static Length(SELF:number):number{
+        //return RGBA.Array.len(SELF);
+    }
+
+    static setPixel(SELF:number, x:number, y:number, rgba):number{
+        let index:number = (y * (16 * 4)) + (x * 4);
+        let _rgba = @new RGBA;
+        RGBA.init(_rgba, rgba.r, rgba.g, rgba.b, rgba.a);
+        return RGBA.Array.setAt(SELF.data, index, _rgba);
+    }
+
+    static getPixel(SELF:number, x:number, y:number){
+        let index:number = (y * (16 * 4)) + (x * 4);
+        return RGBA.rgba(RGBA.Array.at(SELF.data, index));
+    }
+
+} //@end

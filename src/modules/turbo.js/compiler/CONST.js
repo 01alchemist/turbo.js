@@ -21,10 +21,31 @@ exports.PathLazy = "((?:\\." + exports.Id + ")+?)";
 exports.PathOpt = "((?:\\." + exports.Id + ")*)";
 exports.PathOptLazy = "((?:\\." + exports.Id + ")*?)";
 exports.AssignOp = "(=|\\+=|-=|&=|\\|=|\\^=)(?!=)";
-exports.start_re = new RegExp("^" + exports.Os + "@turbo::" + exports.Ws + "(?:struct|class)" + exports.Ws + "(?:" + exports.Id + ")");
-exports.end_re = new RegExp("^" + exports.Rbrace + exports.Os + "@end" + exports.CommentOpt + "$");
-exports.struct_re = new RegExp("^" + exports.Os + "@turbo::" + exports.Ws + "struct" + exports.Ws + "(" + exports.Id + ")" + exports.Lbrace + exports.CommentOpt + "$");
-exports.class_re = new RegExp("^" + exports.Os + "@turbo::" + exports.Ws + "class" + exports.Ws + "(" + exports.Id + ")" + exports.Os + "(?:extends" + exports.Ws + "(" + exports.Id + "))?" + exports.Lbrace + exports.CommentOpt + "$");
+exports.Matcher = {
+    START: new RegExp("^" + exports.Os + "@turbo" + exports.Ws + "(?:struct|class)" + exports.Ws + "(?:" + exports.Id + ")"),
+    END: new RegExp("^" + exports.Rbrace + exports.Os + "//@end" + exports.CommentOpt + "$"),
+    STRUCT: new RegExp("^" + exports.Os + "@turbo" + exports.Ws + "struct" + exports.Ws + "(" + exports.Id + ")" + exports.Lbrace + exports.CommentOpt + "$"),
+    CLASS: new RegExp("^" + exports.Os + "@turbo" + exports.Ws + "class" + exports.Ws + "(" + exports.Id + ")" + exports.Os + "(?:extends" + exports.Ws + "(" + exports.Id + "))?" + exports.Lbrace + exports.CommentOpt + "$"),
+    SPECIAL: new RegExp("^" + exports.Os + "@(get|set)" + "(" + exports.LParen + exports.Os + "SELF.*)$"),
+    METHOD: new RegExp("^" + exports.Os + "@(method|virtual)" + exports.Ws + "(" + exports.Id + ")" + "(" + exports.LParen + exports.Os + "SELF.*)$"),
+    BLANK: new RegExp("^" + exports.Os + exports.CommentOpt + "$"),
+    SPACE: new RegExp("^" + exports.Os + "$"),
+    PROP: new RegExp("^" + exports.Os + "(" + exports.Id + ")" + exports.Os + ":" + exports.Os + "(" + exports.Id + ")" + exports.QualifierOpt + "(?:\.(Array))?" + exports.Os + ",?" + exports.CommentOpt + "$"),
+    NEW: new RegExp("@new\\s+(" + exports.Id + ")" + exports.QualifierOpt + "(?:\\.(Array)" + exports.LParen + ")?", "g"),
+    ACC: new RegExp("(" + exports.Id + ")" + exports.PathOptLazy + "(?:" + exports.Operation + "|)" + exports.LParen, "g"),
+    // It would sure be nice to avoid the explicit ".Array" here, but I don't yet know how.
+    ARR: new RegExp("(" + exports.Id + ")" + exports.QualifierOpt + "\\.Array" + exports.PathOpt + exports.Operation + exports.LParen, "g"),
+    // Macro expansion and pasteup
+    self_getter1: new RegExp("SELF" + exports.Path + exports.NullaryOperation, "g"),
+    self_getter2: new RegExp("SELF" + exports.Path, "g"),
+    self_accessor: new RegExp("SELF" + exports.Path + exports.OperationLParen, "g"),
+    self_setter: new RegExp("SELF" + exports.Path + exports.Os + exports.AssignOp + exports.Os, "g"),
+    self_invoke: new RegExp("SELF\\.(" + exports.Id + ")" + exports.LParen, "g")
+};
+exports.start_re = new RegExp("^" + exports.Os + "@turbo" + exports.Ws + "(?:struct|class)" + exports.Ws + "(?:" + exports.Id + ")");
+exports.end_re = new RegExp("^" + exports.Rbrace + exports.Os + "//@end" + exports.CommentOpt + "$");
+exports.struct_re = new RegExp("^" + exports.Os + "@turbo" + exports.Ws + "struct" + exports.Ws + "(" + exports.Id + ")" + exports.Lbrace + exports.CommentOpt + "$");
+exports.class_re = new RegExp("^" + exports.Os + "@turbo" + exports.Ws + "class" + exports.Ws + "(" + exports.Id + ")" + exports.Os + "(?:extends" + exports.Ws + "(" + exports.Id + "))?" + exports.Lbrace + exports.CommentOpt + "$");
 exports.special_re = new RegExp("^" + exports.Os + "@(get|set)" + "(" + exports.LParen + exports.Os + "SELF.*)$");
 exports.method_re = new RegExp("^" + exports.Os + "@(method|virtual)" + exports.Ws + "(" + exports.Id + ")" + "(" + exports.LParen + exports.Os + "SELF.*)$");
 exports.blank_re = new RegExp("^" + exports.Os + exports.CommentOpt + "$");

@@ -21,10 +21,37 @@ export const PathOpt = "((?:\\." + Id + ")*)";
 export const PathOptLazy = "((?:\\." + Id + ")*?)";
 export const AssignOp = "(=|\\+=|-=|&=|\\|=|\\^=)(?!=)";
 
-export const start_re = new RegExp("^" + Os + "@turbo::" + Ws + "(?:struct|class)" + Ws + "(?:" + Id + ")");
-export const end_re = new RegExp("^" + Rbrace + Os + "@end" + CommentOpt + "$");
-export const struct_re = new RegExp("^" + Os + "@turbo::" + Ws + "struct" + Ws + "(" + Id + ")" + Lbrace + CommentOpt + "$");
-export const class_re = new RegExp("^" + Os + "@turbo::" + Ws + "class" + Ws + "(" + Id + ")" + Os + "(?:extends" + Ws + "(" + Id + "))?" + Lbrace + CommentOpt + "$");
+export const Matcher = {
+    START: new RegExp("^" + Os + "@turbo" + Ws + "(?:struct|class)" + Ws + "(?:" + Id + ")"),
+    END: new RegExp("^" + Rbrace + Os + "//@end" + CommentOpt + "$"),
+    STRUCT: new RegExp("^" + Os + "@turbo" + Ws + "struct" + Ws + "(" + Id + ")" + Lbrace + CommentOpt + "$"),
+    CLASS: new RegExp("^" + Os + "@turbo" + Ws + "class" + Ws + "(" + Id + ")" + Os + "(?:extends" + Ws + "(" + Id + "))?" + Lbrace + CommentOpt + "$"),
+    SPECIAL: new RegExp("^" + Os + "@(get|set)" + "(" + LParen + Os + "SELF.*)$"),
+    METHOD: new RegExp("^" + Os + "@(method|virtual)" + Ws + "(" + Id + ")" + "(" + LParen + Os + "SELF.*)$"),
+    BLANK: new RegExp("^" + Os + CommentOpt + "$"),
+    SPACE: new RegExp("^" + Os + "$"),
+    PROP: new RegExp("^" + Os + "(" + Id + ")" + Os + ":" + Os + "(" + Id + ")" + QualifierOpt + "(?:\.(Array))?" + Os + ",?" + CommentOpt + "$"),
+
+    NEW: new RegExp("@new\\s+(" + Id + ")" + QualifierOpt + "(?:\\.(Array)" + LParen + ")?", "g"),
+
+    ACC: new RegExp("(" + Id + ")" + PathOptLazy + "(?:" + Operation + "|)" + LParen, "g"),
+
+    // It would sure be nice to avoid the explicit ".Array" here, but I don't yet know how.
+    ARR: new RegExp("(" + Id + ")" + QualifierOpt + "\\.Array" + PathOpt + Operation + LParen, "g"),
+
+    // Macro expansion and pasteup
+
+    self_getter1: new RegExp("SELF" + Path + NullaryOperation, "g"),
+    self_getter2: new RegExp("SELF" + Path, "g"),
+    self_accessor: new RegExp("SELF" + Path + OperationLParen, "g"),
+    self_setter: new RegExp("SELF" + Path + Os + AssignOp + Os, "g"),
+    self_invoke: new RegExp("SELF\\.(" + Id + ")" + LParen, "g")
+};
+
+export const start_re = new RegExp("^" + Os + "@turbo" + Ws + "(?:struct|class)" + Ws + "(?:" + Id + ")");
+export const end_re = new RegExp("^" + Rbrace + Os + "//@end" + CommentOpt + "$");
+export const struct_re = new RegExp("^" + Os + "@turbo" + Ws + "struct" + Ws + "(" + Id + ")" + Lbrace + CommentOpt + "$");
+export const class_re = new RegExp("^" + Os + "@turbo" + Ws + "class" + Ws + "(" + Id + ")" + Os + "(?:extends" + Ws + "(" + Id + "))?" + Lbrace + CommentOpt + "$");
 export const special_re = new RegExp("^" + Os + "@(get|set)" + "(" + LParen + Os + "SELF.*)$");
 export const method_re = new RegExp("^" + Os + "@(method|virtual)" + Ws + "(" + Id + ")" + "(" + LParen + Os + "SELF.*)$");
 export const blank_re = new RegExp("^" + Os + CommentOpt + "$");
@@ -46,7 +73,7 @@ export const self_accessor_re = new RegExp("SELF" + Path + OperationLParen, "g")
 export const self_setter_re = new RegExp("SELF" + Path + Os + AssignOp + Os, "g");
 export const self_invoke_re = new RegExp("SELF\\.(" + Id + ")" + LParen, "g");
 
- // We've eaten "SELF.id op " and need to grab a plausible RHS.
+// We've eaten "SELF.id op " and need to grab a plausible RHS.
 //
 // Various complications here:
 //

@@ -3,8 +3,23 @@
   "version": "1.0.8",
   "description": "A framework for parallel javascript coding",
   "main": "src/index.js",
+  "watch": {
+    "make-turbo": {
+      "patterns": [
+        "examples",
+        "src/modules/turbo.js/compiler"
+      ],
+      "extensions": "js,tts",
+      "ignore":[
+        "examples/array.compiled.js"
+      ],
+      "quiet": true
+    }
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "npm-watch",
+    "make-turbo": "node examples/make.js",
     "build-project": "tsc -p ./src/modules/turbo.js",
     "watch-project": "tsc -w -p ./src/modules/turbo.js",
     "build-runtime": "tsc ./src/modules/turbo.js/Runtime.ts -m commonjs -d --outDir ./src/modules/turbo.js/bundle/",

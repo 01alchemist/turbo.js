@@ -467,10 +467,22 @@ var Compiler = (function () {
                     ].join('\n'));
                 }
                 else {
-                    push("function " + d.name + "() {}");
-                    push(d.name + ".NAME = \"" + d.name + "\";");
-                    push(d.name + ".SIZE = " + d.size + ";");
-                    push(d.name + ".ALIGN = " + d.align + ";");
+                    // push("function " + d.name + "() {}");
+                    // push(d.name + ".NAME = \"" + d.name + "\";");
+                    // push(d.name + ".SIZE = " + d.size + ";");
+                    // push(d.name + ".ALIGN = " + d.align + ";");
+                    push([
+                        ("export class " + d.name + " {"),
+                        ("   static NAME:string = \"" + d.name + "\";"),
+                        ("   static SIZE:number = " + d.size + ";"),
+                        ("   static ALIGN:number = " + d.align + ";"),
+                        "",
+                    ].join('\n'));
+                    for (var _c = 0, _d = d.props; _c < _d.length; _c++) {
+                        var p = _d[_c];
+                        push("   " + p.name + ";");
+                    }
+                    push("");
                 }
                 // Now do methods.
                 //
@@ -478,8 +490,8 @@ var Compiler = (function () {
                 // For struct methods, the name is "_get_impl", "_set_impl", or "_copy_impl".
                 var haveSetter = false;
                 var haveGetter = false;
-                for (var _c = 0, _d = d.methods; _c < _d.length; _c++) {
-                    var m = _d[_c];
+                for (var _e = 0, _f = d.methods; _e < _f.length; _e++) {
+                    var m = _f[_e];
                     var name_1 = m.name;
                     if (name_1 == "") {
                         switch (m.kind) {
@@ -523,54 +535,54 @@ var Compiler = (function () {
                 if (d.kind == DefnKind_1.DefnKind.Struct) {
                     var struct = d;
                     if (!haveGetter) {
-                        push(d.name + "._get_impl = function (SELF) {");
-                        push("  var v = new " + d.name + ";");
+                        push("    static _get_impl(SELF) {");
+                        push("        var v = new " + d.name + ";");
                         // Use longhand for access, since self accessors are expanded before pasteup.
                         // TODO: Would be useful to fix that.
-                        for (var _e = 0, _f = d.props; _e < _f.length; _e++) {
-                            var p = _f[_e];
-                            push("  v." + p.name + " = " + d.name + "." + p.name + "(SELF);");
+                        for (var _g = 0, _h = d.props; _g < _h.length; _g++) {
+                            var p = _h[_g];
+                            push("        v." + p.name + " = " + d.name + "." + p.name + "(SELF);");
                         }
-                        push("  return v;");
-                        push("}");
+                        push("        return v;");
+                        push("    }");
                         struct.hasGetMethod = true;
                     }
                     if (!haveSetter) {
-                        push(d.name + "._set_impl = function (SELF, v) {");
+                        push("    static _set_impl(SELF, v) {");
                         // TODO: as above.
-                        for (var _g = 0, _h = d.props; _g < _h.length; _g++) {
-                            var p = _h[_g];
-                            push("  " + d.name + "." + p.name + ".set(SELF, v." + p.name + ");");
+                        for (var _j = 0, _k = d.props; _j < _k.length; _j++) {
+                            var p = _k[_j];
+                            push("        " + d.name + "." + p.name + ".set(SELF, v." + p.name + ");");
                         }
-                        push("}");
+                        push("    }");
                         struct.hasSetMethod = true;
                     }
                 }
                 // Now do vtable, if appropriate.
                 if (d.kind == DefnKind_1.DefnKind.Class) {
                     var cls = d;
-                    for (var _j = 0, _k = cls.vtable; _j < _k.length; _j++) {
-                        var virtual = _k[_j];
+                    for (var _l = 0, _m = cls.vtable; _l < _m.length; _l++) {
+                        var virtual = _m[_l];
                         // Shouldn't matter much
                         emitFn = d.file + "[vtable " + virtual.name + "]";
                         emitLine = d.line;
                         var signature = virtual.signature();
-                        push(d.name + "." + virtual.name + " = function (SELF " + signature + ") {");
-                        push("  switch (turbo.Runtime._mem_int32[SELF>>2]) {");
+                        push("    static " + virtual.name + "(SELF " + signature + ") {");
+                        push("        switch (turbo.Runtime._mem_int32[SELF>>2]) {");
                         var kv = virtual.reverseCases.keysValues();
-                        for (var _l = kv.next(), name_2 = _l[0], cases = _l[1]; name_2; (_m = kv.next(), name_2 = _m[0], cases = _m[1], _m)) {
-                            for (var _o = 0, cases_1 = cases; _o < cases_1.length; _o++) {
-                                var c = cases_1[_o];
-                                push("    case " + c + ":");
+                        for (var _o = kv.next(), name_2 = _o[0], cases = _o[1]; name_2; (_p = kv.next(), name_2 = _p[0], cases = _p[1], _p)) {
+                            for (var _q = 0, cases_1 = cases; _q < cases_1.length; _q++) {
+                                var c = cases_1[_q];
+                                push("            case " + c + ":");
                             }
-                            push("      return " + name_2 + "(SELF " + signature + ");");
+                            push("                return " + name_2 + "(SELF " + signature + ");");
                         }
-                        push("    default:");
-                        push("      " + (virtual.default_ ?
+                        push("            default:");
+                        push("              " + (virtual.default_ ?
                             "return " + virtual.default_ + "(SELF " + signature + ")" :
                             "throw turbo.Runtime._badType(SELF)") + ";");
-                        push("  }");
-                        push("}");
+                        push("        }");
+                        push("    }");
                     }
                 }
                 // Now do other methods: initInstance.
@@ -578,8 +590,8 @@ var Compiler = (function () {
                     var cls = d;
                     //push(d.name + ".initInstance = function(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
                     push("    static initInstance(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
-                    push("}");
                 }
+                push("}");
                 if (d.kind == DefnKind_1.DefnKind.Class)
                     push("turbo.Runtime._idToType[" + d.classId + "] = " + d.name + ";");
             }
@@ -587,7 +599,7 @@ var Compiler = (function () {
                 nlines.push(lines[k++]);
             source.lines = nlines;
         }
-        var _m;
+        var _p;
     };
     Compiler.prototype.expandGlobalAccessorsAndMacros = function (sourceProvider) {
         for (var _i = 0, _a = sourceProvider.allSources; _i < _a.length; _i++) {
@@ -800,7 +812,7 @@ var Compiler = (function () {
             if (field)
                 return nomatch;
         }
-        var ref = "(" + this.expandMacrosIn(file, line, index_1.endstrip(as[0])) + "+" + multiplier + "*" + this.expandMacrosIn(file, line, index_1.endstrip(as[1])) + ")";
+        var ref = "( 4 + " + this.expandMacrosIn(file, line, index_1.endstrip(as[0])) + "+" + multiplier + "*" + this.expandMacrosIn(file, line, index_1.endstrip(as[1])) + ")";
         if (field) {
             var fld = type.findAccessibleFieldFor(operation, field);
             if (!fld)
@@ -845,7 +857,7 @@ var Compiler = (function () {
             throw new ProgramError_1.ProgramError(file, line, "Wrong number of arguments to @new " + baseType + ".Array");
         // NOTE, parens removed here
         // Issue #16: Watch it: Parens interact with semicolon insertion.
-        var expr = "turbo.Runtime.allocOrThrow(" + t.elementSize + " * " + this.expandMacrosIn(file, line, index_1.endstrip(as[0])) + ", " + t.elementAlign + ")";
+        var expr = "turbo.Runtime.allocOrThrow(4 + (" + t.elementSize + " * " + this.expandMacrosIn(file, line, index_1.endstrip(as[0])) + "), " + t.elementAlign + ") /*Array*/";
         return [left + expr + s.substring(pp.where),
             left.length + expr.length];
     };

@@ -508,10 +508,23 @@ export class Compiler {
                         ].join('\n')
                     );
                 }else {
-                    push("function " + d.name + "() {}");
-                    push(d.name + ".NAME = \"" + d.name + "\";");
-                    push(d.name + ".SIZE = " + d.size + ";");
-                    push(d.name + ".ALIGN = " + d.align + ";");
+                    // push("function " + d.name + "() {}");
+                    // push(d.name + ".NAME = \"" + d.name + "\";");
+                    // push(d.name + ".SIZE = " + d.size + ";");
+                    // push(d.name + ".ALIGN = " + d.align + ";");
+
+                    push([
+                            `export class ${d.name} {`,
+                            `   static NAME:string = "${d.name}";`,
+                            `   static SIZE:number = ${d.size};`,
+                            `   static ALIGN:number = ${d.align};`,
+                            ``,
+                        ].join('\n')
+                    );
+                    for (var p of d.props)
+                        push(`   ${p.name};`);
+
+                    push(``);
                 }
 
 
@@ -568,23 +581,23 @@ export class Compiler {
                 if (d.kind == DefnKind.Struct) {
                     var struct = <StructDefn> d;
                     if (!haveGetter) {
-                        push(d.name + "._get_impl = function (SELF) {");
-                        push("  var v = new " + d.name + ";");
+                        push("    static _get_impl(SELF) {");
+                        push("        var v = new " + d.name + ";");
                         // Use longhand for access, since self accessors are expanded before pasteup.
                         // TODO: Would be useful to fix that.
                         for (var p of d.props)
-                            push("  v." + p.name + " = " + d.name + "." + p.name + "(SELF);");
-                        push("  return v;");
-                        push("}");
+                            push("        v." + p.name + " = " + d.name + "." + p.name + "(SELF);");
+                        push("        return v;");
+                        push("    }");
                         struct.hasGetMethod = true;
                     }
 
                     if (!haveSetter) {
-                        push(d.name + "._set_impl = function (SELF, v) {");
+                        push("    static _set_impl(SELF, v) {");
                         // TODO: as above.
                         for (var p of d.props)
-                            push("  " + d.name + "." + p.name + ".set(SELF, v." + p.name + ");");
-                        push("}");
+                            push("        " + d.name + "." + p.name + ".set(SELF, v." + p.name + ");");
+                        push("    }");
                         struct.hasSetMethod = true;
                     }
                 }
@@ -598,20 +611,20 @@ export class Compiler {
                         emitFn = d.file + "[vtable " + virtual.name + "]";
                         emitLine = d.line;
                         let signature = virtual.signature();
-                        push(d.name + "." + virtual.name + " = function (SELF " + signature + ") {");
-                        push("  switch (turbo.Runtime._mem_int32[SELF>>2]) {");
+                        push("    static " + virtual.name + "(SELF " + signature + ") {");
+                        push("        switch (turbo.Runtime._mem_int32[SELF>>2]) {");
                         let kv = virtual.reverseCases.keysValues();
                         for (let [name,cases]=kv.next(); name; [name, cases] = kv.next()) {
                             for (let c of cases)
-                                push(`    case ${c}:`);
-                            push(`      return ${name}(SELF ${signature});`);
+                                push(`            case ${c}:`);
+                            push(`                return ${name}(SELF ${signature});`);
                         }
-                        push("    default:");
-                        push("      " + (virtual.default_ ?
+                        push("            default:");
+                        push("              " + (virtual.default_ ?
                                 `return ${virtual.default_}(SELF ${signature})` :
                                 "throw turbo.Runtime._badType(SELF)") + ";");
-                        push("  }");
-                        push("}");
+                        push("        }");
+                        push("    }");
                     }
                 }
 
@@ -621,8 +634,9 @@ export class Compiler {
                     let cls = <ClassDefn> d;
                     //push(d.name + ".initInstance = function(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
                     push("    static initInstance(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
-                    push("}");
                 }
+
+                push("}");
 
                 if (d.kind == DefnKind.Class)
                     push("turbo.Runtime._idToType[" + (<ClassDefn> d).classId + "] = " + d.name + ";");
@@ -862,7 +876,7 @@ export class Compiler {
             if (field)
                 return nomatch;
         }
-        let ref = "(" + this.expandMacrosIn(file, line, endstrip(as[0])) + "+" + multiplier + "*" + this.expandMacrosIn(file, line, endstrip(as[1])) + ")";
+        let ref = "( 4 + " + this.expandMacrosIn(file, line, endstrip(as[0])) + "+" + multiplier + "*" + this.expandMacrosIn(file, line, endstrip(as[1])) + ")";
         if (field) {
             let fld = (<StructDefn> type).findAccessibleFieldFor(operation, field);
             if (!fld)
@@ -915,7 +929,7 @@ export class Compiler {
 
         // NOTE, parens removed here
         // Issue #16: Watch it: Parens interact with semicolon insertion.
-        let expr = "turbo.Runtime.allocOrThrow(" + t.elementSize + " * " + this.expandMacrosIn(file, line, endstrip(as[0])) + ", " + t.elementAlign + ")";
+        let expr = "turbo.Runtime.allocOrThrow(4 + (" + t.elementSize + " * " + this.expandMacrosIn(file, line, endstrip(as[0])) + "), " + t.elementAlign + ") /*Array*/";
         return [left + expr + s.substring(pp.where),
             left.length + expr.length];
     }

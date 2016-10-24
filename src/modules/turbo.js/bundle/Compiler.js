@@ -751,10 +751,10 @@ System.register("CONST", [], function(exports_20, context_20) {
             exports_20("PathOpt", PathOpt = "((?:\\." + Id + ")*)");
             exports_20("PathOptLazy", PathOptLazy = "((?:\\." + Id + ")*?)");
             exports_20("AssignOp", AssignOp = "(=|\\+=|-=|&=|\\|=|\\^=)(?!=)");
-            exports_20("start_re", start_re = new RegExp("^" + Os + "@turbo::" + Ws + "(?:struct|class)" + Ws + "(?:" + Id + ")"));
+            exports_20("start_re", start_re = new RegExp("^" + Os + "@turbo" + Ws + "(?:struct|class)" + Ws + "(?:" + Id + ")"));
             exports_20("end_re", end_re = new RegExp("^" + Rbrace + Os + "@end" + CommentOpt + "$"));
-            exports_20("struct_re", struct_re = new RegExp("^" + Os + "@turbo::" + Ws + "struct" + Ws + "(" + Id + ")" + Lbrace + CommentOpt + "$"));
-            exports_20("class_re", class_re = new RegExp("^" + Os + "@turbo::" + Ws + "class" + Ws + "(" + Id + ")" + Os + "(?:extends" + Ws + "(" + Id + "))?" + Lbrace + CommentOpt + "$"));
+            exports_20("struct_re", struct_re = new RegExp("^" + Os + "@turbo" + Ws + "struct" + Ws + "(" + Id + ")" + Lbrace + CommentOpt + "$"));
+            exports_20("class_re", class_re = new RegExp("^" + Os + "@turbo" + Ws + "class" + Ws + "(" + Id + ")" + Os + "(?:extends" + Ws + "(" + Id + "))?" + Lbrace + CommentOpt + "$"));
             exports_20("special_re", special_re = new RegExp("^" + Os + "@(get|set)" + "(" + LParen + Os + "SELF.*)$"));
             exports_20("method_re", method_re = new RegExp("^" + Os + "@(method|virtual)" + Ws + "(" + Id + ")" + "(" + LParen + Os + "SELF.*)$"));
             exports_20("blank_re", blank_re = new RegExp("^" + Os + CommentOpt + "$"));

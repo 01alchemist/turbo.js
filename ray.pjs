@@ -54,7 +54,7 @@ function normalize(a) { var d = length(a); return DL3(a.x/d, a.y/d, a.z/d); }
 function cross(a, b) { return DL3(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x); }
 function dot(a, b) { return a.x*b.x + a.y*b.y + a.z*b.z; }
 
-@turbo:: struct Vec3 {
+@turbo struct Vec3 {
     x: float64
     y: float64
     z: float64
@@ -70,7 +70,7 @@ function subvref(a, b) { return DL3(a.x-Vec3.x(b), a.y-Vec3.y(b), a.z-Vec3.z(b))
 function subrefref(a, b) { return DL3(Vec3.x(a)-Vec3.x(b), Vec3.y(a)-Vec3.y(b), Vec3.z(a)-Vec3.z(b)); }
 function mulrefi(a, c) { return DL3(Vec3.x(a)*c, Vec3.y(a)*c, Vec3.z(a)*c); }
 
-@turbo:: struct Material {
+@turbo struct Material {
     diffuse:   Vec3
     specular:  Vec3
     shininess: float64
@@ -88,7 +88,7 @@ function makeMaterial(diffuse, specular, shininess, ambient, mirror) {
     return v;
 }
 
-@turbo:: class Surface {
+@turbo class Surface {
     material: Material
 
     @method init(SELF, material) {
@@ -105,7 +105,7 @@ function makeMaterial(diffuse, specular, shininess, ambient, mirror) {
     }
 } @end
 
-@turbo:: class Scene extends Surface {
+@turbo class Scene extends Surface {
     length: int32
     objects: Surface.Array
 
@@ -141,7 +141,7 @@ function makeMaterial(diffuse, specular, shininess, ambient, mirror) {
 
 } @end
 
-@turbo:: class Sphere extends Surface {
+@turbo class Sphere extends Surface {
     center: Vec3
     radius: float64
 
@@ -177,7 +177,7 @@ function makeMaterial(diffuse, specular, shininess, ambient, mirror) {
     }
 } @end
 
-@turbo:: class Triangle extends Surface {
+@turbo class Triangle extends Surface {
     v1: Vec3
     v2: Vec3
     v3: Vec3
@@ -227,7 +227,7 @@ function makeMaterial(diffuse, specular, shininess, ambient, mirror) {
 
 } @end
 
-@turbo:: class Bitmap {
+@turbo class Bitmap {
     data: int32.Array
     height: int32
     width: int32

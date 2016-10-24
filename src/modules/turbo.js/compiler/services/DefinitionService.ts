@@ -6,7 +6,7 @@ import {MethodKind} from "../kind/MethodKind";
 import {ProgramError} from "../errors/ProgramError";
 import {ClassDefn} from "../define/ClassDefn";
 import {StructDefn} from "../define/StructDefn";
-import {start_re, struct_re, class_re, end_re, method_re, special_re, prop_re, blank_re} from "../CONST";
+import {start_re, struct_re, class_re, end_re, method_re, special_re, prop_re, blank_re, Matcher} from "../CONST";
 import {PropQual} from "../entities/PropQual";
 import {ParamParser} from "../parser/ParamParser";
 /**
@@ -14,33 +14,41 @@ import {ParamParser} from "../parser/ParamParser";
  */
 export class DefinitionService {
 
+    /**
+     * Collect all definitions from the source code
+     * */
     collectDefinitions(filename:string, lines:string[]):[UserDefn[], SourceLine[]] {
+
         let defs:UserDefn[] = [];
-        let nlines:SourceLine[] = [];
-        let i = 0, lim = lines.length;
-        while (i < lim) {
-            let l = lines[i++];
-            if (!start_re.test(l)) {
-                nlines.push(new SourceLine(filename, i, l));
+        let turboLines:SourceLine[] = [];
+        let i:number = 0;
+        let numLines:number = lines.length;
+        let line:string;
+
+        while (i < numLines) {
+            line = lines[i++];
+            if (!Matcher.START.test(line)) {
+                turboLines.push(new SourceLine(filename, i, line));
                 continue;
             }
 
             let kind = "";
             let name = "";
             let inherit = "";
-            let lineno = i;
+            let lineNumber = i;
             let m:string[] = null;
-            if (m = struct_re.exec(l)) {
+            if (m = Matcher.STRUCT.exec(line)) {
                 kind = "struct";
                 name = m[1];
             }
-            else if (m = class_re.exec(l)) {
+            else if (m = Matcher.CLASS.exec(line)) {
                 kind = "class";
                 name = m[1];
                 inherit = m[2] ? m[2] : "";
             }
-            else
+            else {
                 throw new ProgramError(filename, i, "Syntax error: Malformed definition line");
+            }
 
             let properties:Prop[] = [];
             let methods:Method[] = [];
@@ -54,15 +62,24 @@ export class DefinitionService {
             // Do not check for duplicate names here since that needs to
             // take into account inheritance.
 
-            while (i < lim) {
-                l = lines[i++];
-                if (end_re.test(l))
+            while (i < numLines) {
+
+                line = lines[i++];
+
+                if (Matcher.END.test(line)) {
                     break;
-                if (m = method_re.exec(l.trim())) {
-                    if (kind != "class")
+                }
+
+                if (m = Matcher.METHOD.exec(line.trim())) {
+
+                    if (kind != "class") {
                         throw new ProgramError(filename, i, "@method is only allowed in classes");
-                    if (in_method)
+                    }
+
+                    if (in_method) {
                         methods.push(new Method(method_line, method_type, method_name, method_signature, mbody));
+                    }
+
                     in_method = true;
                     method_line = i;
                     method_type = (m[1] == "method" ? MethodKind.NonVirtual : MethodKind.Virtual);
@@ -81,7 +98,7 @@ export class DefinitionService {
                     });
                     mbody = [m[3]];
                 }
-                else if (m = special_re.exec(l.trim())) {
+                else if (m = Matcher.SPECIAL.exec(line.trim())) {
                     if (kind != "struct")
                         throw new ProgramError(filename, i, `@${m[1]} is only allowed in structs`);
                     if (in_method)
@@ -106,9 +123,9 @@ export class DefinitionService {
                     // really should be placed at the beginning of the
                     // next method.  Also see hack in pasteupTypes() that
                     // removes blank lines from the end of a method body.
-                    mbody.push(l);
+                    mbody.push(line);
                 }
-                else if (m = prop_re.exec(l)) {
+                else if (m = Matcher.PROP.exec(line)) {
                     let qual = PropQual.None;
                     switch (m[3]) {
                         case "synchronic":
@@ -120,20 +137,20 @@ export class DefinitionService {
                     }
                     properties.push(new Prop(i, m[1], qual, m[4] == "Array", m[2]));
                 }
-                else if (blank_re.test(l)) {
+                else if (blank_re.test(line)) {
                 }
                 else
-                    throw new ProgramError(filename, i, "Syntax error: Not a property or method: " + l);
+                    throw new ProgramError(filename, i, "Syntax error: Not a property or method: " + line);
             }
             if (in_method)
                 methods.push(new Method(method_line, method_type, method_name, method_signature, mbody));
 
             if (kind == "class")
-                defs.push(new ClassDefn(filename, lineno, name, inherit, properties, methods, nlines.length));
+                defs.push(new ClassDefn(filename, lineNumber, name, inherit, properties, methods, turboLines.length));
             else
-                defs.push(new StructDefn(filename, lineno, name, properties, methods, nlines.length));
+                defs.push(new StructDefn(filename, lineNumber, name, properties, methods, turboLines.length));
         }
-        return [defs, nlines];
+        return [defs, turboLines];
     }
 
     // The input is Id, Id:Blah, or ...Id.  Strip any :Blah annotations.
