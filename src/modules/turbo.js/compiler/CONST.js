@@ -23,7 +23,7 @@ exports.PathOptLazy = "((?:\\." + exports.Id + ")*?)";
 exports.AssignOp = "(=|\\+=|-=|&=|\\|=|\\^=)(?!=)";
 exports.Matcher = {
     START: new RegExp("^" + exports.Os + "@turbo" + exports.Ws + "(?:struct|class)" + exports.Ws + "(?:" + exports.Id + ")"),
-    END: new RegExp("^" + exports.Rbrace + exports.Os + "//@end" + exports.CommentOpt + "$"),
+    END: new RegExp("^" + exports.Rbrace + exports.Os + "@end" + exports.CommentOpt + "$"),
     STRUCT: new RegExp("^" + exports.Os + "@turbo" + exports.Ws + "struct" + exports.Ws + "(" + exports.Id + ")" + exports.Lbrace + exports.CommentOpt + "$"),
     CLASS: new RegExp("^" + exports.Os + "@turbo" + exports.Ws + "class" + exports.Ws + "(" + exports.Id + ")" + exports.Os + "(?:extends" + exports.Ws + "(" + exports.Id + "))?" + exports.Lbrace + exports.CommentOpt + "$"),
     SPECIAL: new RegExp("^" + exports.Os + "@(get|set)" + "(" + exports.LParen + exports.Os + "SELF.*)$"),

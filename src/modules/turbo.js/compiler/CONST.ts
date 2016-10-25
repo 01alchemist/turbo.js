@@ -23,7 +23,7 @@ export const AssignOp = "(=|\\+=|-=|&=|\\|=|\\^=)(?!=)";
 
 export const Matcher = {
     START: new RegExp("^" + Os + "@turbo" + Ws + "(?:struct|class)" + Ws + "(?:" + Id + ")"),
-    END: new RegExp("^" + Rbrace + Os + "//@end" + CommentOpt + "$"),
+    END: new RegExp("^" + Rbrace + Os + "@end" + CommentOpt + "$"),
     STRUCT: new RegExp("^" + Os + "@turbo" + Ws + "struct" + Ws + "(" + Id + ")" + Lbrace + CommentOpt + "$"),
     CLASS: new RegExp("^" + Os + "@turbo" + Ws + "class" + Ws + "(" + Id + ")" + Os + "(?:extends" + Ws + "(" + Id + "))?" + Lbrace + CommentOpt + "$"),
     SPECIAL: new RegExp("^" + Os + "@(get|set)" + "(" + LParen + Os + "SELF.*)$"),
