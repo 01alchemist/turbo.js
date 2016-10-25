@@ -876,7 +876,7 @@ export class Compiler {
             if (field)
                 return nomatch;
         }
-        let ref = "( 4 + " + this.expandMacrosIn(file, line, endstrip(as[0])) + "+" + multiplier + "*" + this.expandMacrosIn(file, line, endstrip(as[1])) + ")";
+        let ref = "(  " + this.expandMacrosIn(file, line, endstrip(as[0])) + "+" + multiplier + "*" + this.expandMacrosIn(file, line, endstrip(as[1])) + ")";
         if (field) {
             let fld = (<StructDefn> type).findAccessibleFieldFor(operation, field);
             if (!fld)
@@ -929,7 +929,7 @@ export class Compiler {
 
         // NOTE, parens removed here
         // Issue #16: Watch it: Parens interact with semicolon insertion.
-        let expr = "turbo.Runtime.allocOrThrow(4 + (" + t.elementSize + " * " + this.expandMacrosIn(file, line, endstrip(as[0])) + "), " + t.elementAlign + ") /*Array*/";
+        let expr = "turbo.Runtime.allocOrThrow( (" + t.elementSize + " * " + this.expandMacrosIn(file, line, endstrip(as[0])) + "), " + t.elementAlign + ") /*Array*/";
         return [left + expr + s.substring(pp.where),
             left.length + expr.length];
     }

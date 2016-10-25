@@ -812,7 +812,7 @@ var Compiler = (function () {
             if (field)
                 return nomatch;
         }
-        var ref = "( 4 + " + this.expandMacrosIn(file, line, index_1.endstrip(as[0])) + "+" + multiplier + "*" + this.expandMacrosIn(file, line, index_1.endstrip(as[1])) + ")";
+        var ref = "(  " + this.expandMacrosIn(file, line, index_1.endstrip(as[0])) + "+" + multiplier + "*" + this.expandMacrosIn(file, line, index_1.endstrip(as[1])) + ")";
         if (field) {
             var fld = type.findAccessibleFieldFor(operation, field);
             if (!fld)
@@ -857,7 +857,7 @@ var Compiler = (function () {
             throw new ProgramError_1.ProgramError(file, line, "Wrong number of arguments to @new " + baseType + ".Array");
         // NOTE, parens removed here
         // Issue #16: Watch it: Parens interact with semicolon insertion.
-        var expr = "turbo.Runtime.allocOrThrow(4 + (" + t.elementSize + " * " + this.expandMacrosIn(file, line, index_1.endstrip(as[0])) + "), " + t.elementAlign + ") /*Array*/";
+        var expr = "turbo.Runtime.allocOrThrow( (" + t.elementSize + " * " + this.expandMacrosIn(file, line, index_1.endstrip(as[0])) + "), " + t.elementAlign + ") /*Array*/";
         return [left + expr + s.substring(pp.where),
             left.length + expr.length];
     };

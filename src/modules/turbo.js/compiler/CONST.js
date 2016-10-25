@@ -43,7 +43,7 @@ exports.Matcher = {
     self_invoke: new RegExp("SELF\\.(" + exports.Id + ")" + exports.LParen, "g")
 };
 exports.start_re = new RegExp("^" + exports.Os + "@turbo" + exports.Ws + "(?:struct|class)" + exports.Ws + "(?:" + exports.Id + ")");
-exports.end_re = new RegExp("^" + exports.Rbrace + exports.Os + "//@end" + exports.CommentOpt + "$");
+exports.end_re = new RegExp("^" + exports.Rbrace + exports.Os + "@end" + exports.CommentOpt + "$");
 exports.struct_re = new RegExp("^" + exports.Os + "@turbo" + exports.Ws + "struct" + exports.Ws + "(" + exports.Id + ")" + exports.Lbrace + exports.CommentOpt + "$");
 exports.class_re = new RegExp("^" + exports.Os + "@turbo" + exports.Ws + "class" + exports.Ws + "(" + exports.Id + ")" + exports.Os + "(?:extends" + exports.Ws + "(" + exports.Id + "))?" + exports.Lbrace + exports.CommentOpt + "$");
 exports.special_re = new RegExp("^" + exports.Os + "@(get|set)" + "(" + exports.LParen + exports.Os + "SELF.*)$");
