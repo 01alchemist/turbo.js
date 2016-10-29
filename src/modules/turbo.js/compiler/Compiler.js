@@ -54,10 +54,13 @@ var Compiler = (function () {
         this.pasteupTypes(sourceProvider);
         this.expandGlobalAccessorsAndMacros(sourceProvider);
         var bundle = "//turbo.js bundle\n";
-        var dependencies = fs.readFileSync(path.resolve(__dirname, "../", "Runtime.ts")).toString();
-        //dependencies = dependencies.replace("//# sourceMappingURL=Runtime.js.map", "");
-        bundle += dependencies + "\n\n";
+        var dependencies = fs.readFileSync(path.resolve(__dirname, "../", "Runtime.js")).toString();
+        dependencies = dependencies.replace("//# sourceMappingURL=Runtime.js.map", "");
+        // bundle += dependencies + "\n\n";
         bundle += fs.readFileSync(path.resolve(__dirname, "../includes", "turbo.ts")).toString() + "\n\n";
+        if (args.options.moduleName) {
+            bundle += "namespace " + args.options.moduleName + " {\n";
+        }
         for (var _i = 0, _a = sourceProvider.allSources; _i < _a.length; _i++) {
             var s = _a[_i];
             var header = "// Generated from " + s.input_file + " by turbo.js " +
@@ -71,11 +74,15 @@ var Compiler = (function () {
                 fs.writeFileSync(s.output_file, header_1 + "\n" + s.allText(), "utf8");
             }
         }
+        if (args.options.moduleName) {
+            bundle += "}\n";
+        }
         if (args.options.bundle) {
             var outDir = args.options.outDir;
             var outFile = args.options.outFile || "turbo-bundle.ts";
             outDir = outDir.substr(outDir.length - 2, 1) === "/" ? outDir : outDir + "/";
             fs.writeFileSync(outDir + outFile, bundle, "utf8");
+            fs.writeFileSync(outDir + "turbo-runtime.js", dependencies, "utf8");
         }
     };
     Compiler.prototype.buildTypeMap = function (sourceProvider) {

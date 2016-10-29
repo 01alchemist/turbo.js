@@ -38,6 +38,7 @@ export enum CompilerTarget{
 export interface CompilerOptions {
     target?:CompilerTarget;
     bundle?:boolean;
+    moduleName?:string;
     outFile?:string;
     outDir?:string;
 }
@@ -82,10 +83,14 @@ export class Compiler {
 
         let bundle:string = "//turbo.js bundle\n";
         
-        var dependencies = fs.readFileSync(path.resolve(__dirname, "../", "Runtime.ts")).toString();
-        //dependencies = dependencies.replace("//# sourceMappingURL=Runtime.js.map", "");
-        bundle += dependencies + "\n\n";
+        var dependencies = fs.readFileSync(path.resolve(__dirname, "../", "Runtime.js")).toString();
+        dependencies = dependencies.replace("//# sourceMappingURL=Runtime.js.map", "");
+        // bundle += dependencies + "\n\n";
         bundle += fs.readFileSync(path.resolve(__dirname, "../includes", "turbo.ts")).toString() + "\n\n";
+
+        if(args.options.moduleName){
+            bundle += `namespace ${args.options.moduleName} {\n`;
+        }
 
         for (let s of sourceProvider.allSources) {
 
@@ -102,11 +107,16 @@ export class Compiler {
             }
         }
 
+        if(args.options.moduleName){
+            bundle += "}\n";
+        }
+
         if (args.options.bundle) {
             let outDir:string = args.options.outDir;
             let outFile:string = args.options.outFile || "turbo-bundle.ts";
             outDir = outDir.substr(outDir.length - 2, 1) === "/" ? outDir : outDir + "/";
             fs.writeFileSync(outDir + outFile, bundle, "utf8");
+            fs.writeFileSync(outDir + "turbo-runtime.js", dependencies, "utf8");
         }
     }
 

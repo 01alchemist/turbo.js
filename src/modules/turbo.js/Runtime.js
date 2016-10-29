@@ -2,36 +2,41 @@
 /**
  * Created by Nidin Vinayakan on 6/13/2016.
  */
-var Atomics = window["Atomics"];
-var SharedArrayBuffer = window["SharedArrayBuffer"];
-if (typeof "Atomics" == "undefined") {
-    window["Atomics"] = {
-        load: function () {
-            throw "No Atomics";
-        },
-        store: function () {
-            throw "No Atomics";
-        },
-        add: function () {
-            throw "No Atomics";
-        },
-        sub: function () {
-            throw "No Atomics";
-        },
-        and: function () {
-            throw "No Atomics";
-        },
-        or: function () {
-            throw "No Atomics";
-        },
-        xor: function () {
-            throw "No Atomics";
-        },
-        compareExchange: function () {
-            throw "No Atomics";
-        }
-    };
+var WORKER_ENV = false;
+if (typeof importScripts === 'function') {
+    var window = this;
+    WORKER_ENV = true;
 }
+// var Atomics:any = window["Atomics"];
+// var SharedArrayBuffer:any = window["SharedArrayBuffer"];
+// if (typeof "Atomics" == "undefined") {
+//     window["Atomics"] = {
+//         load: function () {
+//             throw "No Atomics";
+//         },
+//         store: function () {
+//             throw "No Atomics";
+//         },
+//         add: function () {
+//             throw "No Atomics";
+//         },
+//         sub: function () {
+//             throw "No Atomics";
+//         },
+//         and: function () {
+//             throw "No Atomics";
+//         },
+//         or: function () {
+//             throw "No Atomics";
+//         },
+//         xor: function () {
+//             throw "No Atomics";
+//         },
+//         compareExchange: function () {
+//             throw "No Atomics";
+//         }
+//     };
+// }
 function MemoryError(msg) {
     this.message = msg;
 }
@@ -307,9 +312,22 @@ var RuntimeConstructor = (function () {
 }());
 exports.RuntimeConstructor = RuntimeConstructor;
 exports.turbo = {
-    Runtime: new RuntimeConstructor()
+    Runtime: new RuntimeConstructor(),
+    IsWorker: WORKER_ENV,
+    init: function (MB) {
+        var RAW_MEMORY = new SharedArrayBuffer(MB * 1024 * 1024);
+        exports.unsafe.RAW_MEMORY = RAW_MEMORY;
+        this.Runtime.init(RAW_MEMORY, 0, RAW_MEMORY.byteLength, true);
+    },
+    getMemoryUsage: function () {
+        return Math.round(Atomics.load(this.Runtime._mem_int32, 1) / (1024 * 1024)) + "MB";
+    }
+};
+exports.unsafe = {
+    RAW_MEMORY: null
 };
 window["turbo"] = exports.turbo;
+window["unsafe"] = exports.unsafe;
 // For allocators: Do not round up nbytes, for now.  References to
 // fields within structures can be to odd addresses and there's no
 // particular reason that an object can't be allocated on an odd
