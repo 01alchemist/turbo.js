@@ -26,6 +26,7 @@ import {
 } from "./CONST";
 import {ParamParser} from "./parser/ParamParser";
 import {PrimKind} from "./kind/PrimKind";
+import isArray = ts.isArray;
 
 /**
  * Created by Nidin Vinayakan on 6/18/2016.
@@ -440,30 +441,31 @@ export class Compiler {
             for (let m of t.methods) {
                 let body = m.body;
                 for (let k = 0; k < body.length; k++) {
-                    body[k] = this.myExec(t.file, t.line, self_setter_re,
+                    let [result, _] = this.myExec(t.file, t.line, self_setter_re,
                         (file:string, line:number, s:string, p:number, m:RegExpExecArray):[string,number] => {
                             if (p > 0 && this.isSubsequent(s.charAt(p - 1))) return [s, p + m.length];
                             return this.replaceSetterShorthand(file, line, s, p, m, t);
                         },
-                        body[k]);
-                    body[k] = body[k].replace(self_accessor_re, (m, path, operation, p, s) => {
+                        [body[k],-1]);
+                    result = result.replace(self_accessor_re, (m, path, operation, p, s) => {
                         if (p > 0 && this.isSubsequent(s.charAt(p - 1))) return m;
                         return t.name + path + "." + operation + "(SELF, ";
                     });
-                    body[k] = body[k].replace(self_invoke_re, (m, id, p, s) => {
+                    result = result.replace(self_invoke_re, (m, id, p, s) => {
                         if (p > 0 && this.isSubsequent(s.charAt(p - 1))) return m;
                         var pp = new ParamParser(t.file, t.line, s, p + m.length);
                         var args = pp.allArgs();
                         return t.name + "." + id + "(SELF" + (args.length > 0 ? ", " : " ");
                     });
-                    body[k] = body[k].replace(self_getter1_re, (m, path, operation, p, s) => {
+                    result = result.replace(self_getter1_re, (m, path, operation, p, s) => {
                         if (p > 0 && this.isSubsequent(s.charAt(p - 1))) return m;
                         return t.name + path + "." + operation + "(SELF)";
                     });
-                    body[k] = body[k].replace(self_getter2_re, (m, path, p, s) => {
+                    result = result.replace(self_getter2_re, (m, path, p, s) => {
                         if (p > 0 && this.isSubsequent(s.charAt(p - 1))) return m;
                         return t.name + path + "(SELF)";
                     });
+                    body[k] = result;
                 }
             }
         }
@@ -738,6 +740,7 @@ export class Compiler {
                 ref:string, type:Defn, s:string, left:string, operation:string, pp:ParamParser,
                 rhs:string, rhs2:string, nomatch:[string,number]):[string,number] {
         let mem = "", size = 0, synchronic = false, atomic = false, simd = false, shift = -1, simdType = "";
+        let arrayLength:number;
         if (type.kind == DefnKind.Primitive) {
             let prim = <PrimitiveDefn> type;
             mem = prim.memory;
@@ -764,11 +767,16 @@ export class Compiler {
                 case 1:
                     break;
                 case 2:
-                    rhs = this.expandMacrosIn(file, line, endstrip(rhs));
+                    let [_rhs, _arrayLength] = this.expandMacrosIn(file, line, endstrip(rhs));
+                    rhs = _rhs;
+                    arrayLength = _arrayLength;
                     break;
                 case 3:
-                    rhs = this.expandMacrosIn(file, line, endstrip(rhs));
-                    rhs2 = this.expandMacrosIn(file, line, endstrip(rhs2));
+                    let [_rhs, _arrayLength] = this.expandMacrosIn(file, line, endstrip(rhs));
+                    let [_rhs2, _] = this.expandMacrosIn(file, line, endstrip(rhs2));
+                    rhs = _rhs;
+                    rhs2 = _rhs2;
+                    arrayLength = _arrayLength;
                     break;
                 default:
                     throw new InternalError("No operator: " + operation + " " + s);
@@ -798,14 +806,19 @@ export class Compiler {
                 case "xor":
                 case "loadWhenEqual":
                 case "loadWhenNotEqual":
-                    if (atomic)
+                    if (atomic) {
                         expr = `Atomics.${OpAttr[operation].atomic}(turbo.Runtime.${mem}, ${fieldIndex}, ${rhs})`;
-                    else if (synchronic)
+                    }else if (synchronic) {
                         expr = `turbo.Runtime.${OpAttr[operation].synchronic}(${ref}, turbo.Runtime.${mem}, ${fieldIndex}, ${rhs})`;
-                    else if (simd)
+                    }else if (simd) {
                         expr = `SIMD.${simdType}.store(turbo.Runtime.${mem}, ${fieldIndex}, ${rhs})`;
-                    else
+                    }else {
                         expr = `turbo.Runtime.${mem}[${ref} >> ${shift}] ${OpAttr[operation].vanilla} ${rhs}`;
+                        if(arrayLength > -1){
+                            expr += `turbo.Runtime.${mem}[${ref} + 4 >> ${shift}] = ${arrayLength}`;
+                        }
+
+                    }
                     break;
                 case "compareExchange":
                 case "expectUpdate":
@@ -929,7 +942,7 @@ export class Compiler {
                 expr = baseType + ".initInstance(" + expr + ")";
             }
             return [left + expr + s.substring(p + m.length),
-                left.length + expr.length];
+                left.length + expr.length, false];
         }
 
         let pp = new ParamParser(file, line, s, p + m.length);
@@ -939,25 +952,29 @@ export class Compiler {
 
         // NOTE, parens removed here
         // Issue #16: Watch it: Parens interact with semicolon insertion.
-        let expr = "turbo.Runtime.allocOrThrow( (" + t.elementSize + " * " + this.expandMacrosIn(file, line, endstrip(as[0])) + "), " + t.elementAlign + ") /*Array*/";
+        //Array
+        //Change(6-10-16) : Added array length in header
+        //let expr = "turbo.Runtime.allocOrThrow( (" + t.elementSize + " * " + this.expandMacrosIn(file, line, endstrip(as[0])) + "), " + t.elementAlign + ") /*Array*/";
+        let array_len = this.expandMacrosIn(file, line, endstrip(as[0]));
+        let expr = `turbo.Runtime.allocOrThrow( 4 + ( ${t.elementSize} * ${array_len} ), ${t.elementAlign}) /*Array*/`;
         return [left + expr + s.substring(pp.where),
-            left.length + expr.length];
+            left.length + expr.length, array_len];
     }
 
-    expandMacrosIn(file:string, line:number, text:string):string {
+    expandMacrosIn(file:string, line:number, text:string):[string, number] {
         return this.myExec(
             file, line, new_re, this.newMacro.bind(this),
             this.myExec(
                 file, line, arr_re, this.arrMacro.bind(this),
-                this.myExec(file, line, acc_re, this.accMacro.bind(this), text)
+                this.myExec(file, line, acc_re, this.accMacro.bind(this), [text, -1])
             )
         );
     }
 
-    myExec(file:string, line:number, re:RegExp, macro:(fn:string, l:number, s:string, p:number, m:RegExpExecArray)=>[string,number], text:string):string {
+    myExec(file:string, line:number, re:RegExp, macro:(fn:string, l:number, s:string, p:number, m:RegExpExecArray)=>[string,number], [text,_]):[string,number] {
         let old = re.lastIndex;
         re.lastIndex = 0;
-
+        let arrayLength;
         for (; ;) {
             let m = re.exec(text);
             if (!m)
@@ -966,13 +983,15 @@ export class Compiler {
             // the macro may eat additional input.  So the macro should
             // be returning a new string, as well as the index at which
             // to continue the search.
-            let [newText, newStart] = macro(file, line, text, re.lastIndex - m[0].length, m);
+            let [newText, newStart, _arrayLength] = macro(file, line, text, re.lastIndex - m[0].length, m);
             text = newText;
             re.lastIndex = newStart;
+            arrayLength = _arrayLength;
         }
 
         re.lastIndex = old;
-        return text;
+        return [text, arrayLength];
+        // return text;
     }
 
     replaceSetterShorthand(file:string, line:number, s:string, p:number, ms:RegExpExecArray, t:UserDefn):[string,number] {

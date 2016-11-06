@@ -6,22 +6,10 @@
     <script>
         var exports = exports || {};
     </script>
+    <script src="turbo-runtime.js"></script>
     <script src="array.compiled.js"></script>
     <script>
-        const RAW_MEMORY = new SharedArrayBuffer(1024 * 1024);
-        turbo.Runtime.init(RAW_MEMORY, 0, RAW_MEMORY.byteLength, true);
-        var img = Bitmap.NewBitmap();
 
-        console.log(Bitmap.Length(img));
-
-        Bitmap.setPixel(img, 0, 0, {r: 1, g: 1, b: 1, a: 1});
-        Bitmap.setPixel(img, 0, 1, {r: 1, g: 0, b: 0, a: 1});
-        Bitmap.setPixel(img, 0, 2, {r: 1, g: 0, b: 0, a: 1});
-        Bitmap.setPixel(img, 0, 3, {r: 0, g: 1, b: 0, a: 1});
-        console.log(Bitmap.getPixel(img, 0, 0));
-        console.log(Bitmap.getPixel(img, 0, 1));
-        console.log(Bitmap.getPixel(img, 0, 2));
-        console.log(Bitmap.getPixel(img, 0, 3));
     </script>
 </head>
 <body>

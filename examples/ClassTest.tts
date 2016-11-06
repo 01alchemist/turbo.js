@@ -1,0 +1,15 @@
+@turbo class ClassTest{
+
+    id:int32
+    cat:float64
+    x:float64
+    y:float64
+    z:float64
+
+    @method init(SELF){
+        return SELF;
+    }
+} @end
+
+let a = @new ClassTest;
+turbo.free(a);

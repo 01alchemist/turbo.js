@@ -1,4 +1,25 @@
+turbo.init(1024);
+
 type float64 = number;
+
+@turbo struct S1{
+    A:uint8
+} @end
+
+@turbo class D1{
+    A:RGBA.Array
+
+    @method init(SELF){
+        SELF.A = @new RGBA.Array(4);
+        return SELF;
+    }
+    static New(){
+        return D1.init(@new D1);
+    }
+    static _A(SELF){
+        return SELF.A;
+    }
+} @end
 
 @turbo class RGBA{
 
@@ -23,7 +44,7 @@ type float64 = number;
         }
     }
 
-} //@end
+} @end
 
 
 @turbo class Bitmap{
@@ -58,5 +79,8 @@ type float64 = number;
         let index:number = (y * (16 * 4)) + (x * 4);
         return RGBA.rgba(RGBA.Array.at(SELF.data, index));
     }
+    static distroy(SELF){
+        
+    }
 
-} //@end
+} @end

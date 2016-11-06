@@ -398,33 +398,34 @@ var Compiler = (function () {
                 var m = _c[_b];
                 var body = m.body;
                 for (var k = 0; k < body.length; k++) {
-                    body[k] = this.myExec(t.file, t.line, CONST_1.self_setter_re, function (file, line, s, p, m) {
+                    var _d = this.myExec(t.file, t.line, CONST_1.self_setter_re, function (file, line, s, p, m) {
                         if (p > 0 && _this.isSubsequent(s.charAt(p - 1)))
                             return [s, p + m.length];
                         return _this.replaceSetterShorthand(file, line, s, p, m, t);
-                    }, body[k]);
-                    body[k] = body[k].replace(CONST_1.self_accessor_re, function (m, path, operation, p, s) {
+                    }, [body[k], -1]), result = _d[0], _ = _d[1];
+                    result = result.replace(CONST_1.self_accessor_re, function (m, path, operation, p, s) {
                         if (p > 0 && _this.isSubsequent(s.charAt(p - 1)))
                             return m;
                         return t.name + path + "." + operation + "(SELF, ";
                     });
-                    body[k] = body[k].replace(CONST_1.self_invoke_re, function (m, id, p, s) {
+                    result = result.replace(CONST_1.self_invoke_re, function (m, id, p, s) {
                         if (p > 0 && _this.isSubsequent(s.charAt(p - 1)))
                             return m;
                         var pp = new ParamParser_1.ParamParser(t.file, t.line, s, p + m.length);
                         var args = pp.allArgs();
                         return t.name + "." + id + "(SELF" + (args.length > 0 ? ", " : " ");
                     });
-                    body[k] = body[k].replace(CONST_1.self_getter1_re, function (m, path, operation, p, s) {
+                    result = result.replace(CONST_1.self_getter1_re, function (m, path, operation, p, s) {
                         if (p > 0 && _this.isSubsequent(s.charAt(p - 1)))
                             return m;
                         return t.name + path + "." + operation + "(SELF)";
                     });
-                    body[k] = body[k].replace(CONST_1.self_getter2_re, function (m, path, p, s) {
+                    result = result.replace(CONST_1.self_getter2_re, function (m, path, p, s) {
                         if (p > 0 && _this.isSubsequent(s.charAt(p - 1)))
                             return m;
                         return t.name + path + "(SELF)";
                     });
+                    body[k] = result;
                 }
             }
         }
@@ -677,6 +678,7 @@ var Compiler = (function () {
     };
     Compiler.prototype.loadFromRef = function (file, line, ref, type, s, left, operation, pp, rhs, rhs2, nomatch) {
         var mem = "", size = 0, synchronic = false, atomic = false, simd = false, shift = -1, simdType = "";
+        var arrayLength;
         if (type.kind == DefnKind_1.DefnKind.Primitive) {
             var prim = type;
             mem = prim.memory;
@@ -703,11 +705,16 @@ var Compiler = (function () {
                 case 1:
                     break;
                 case 2:
-                    rhs = this.expandMacrosIn(file, line, index_1.endstrip(rhs));
+                    var _a = this.expandMacrosIn(file, line, index_1.endstrip(rhs)), _rhs = _a[0], _arrayLength = _a[1];
+                    rhs = _rhs;
+                    arrayLength = _arrayLength;
                     break;
                 case 3:
-                    rhs = this.expandMacrosIn(file, line, index_1.endstrip(rhs));
-                    rhs2 = this.expandMacrosIn(file, line, index_1.endstrip(rhs2));
+                    var _b = this.expandMacrosIn(file, line, index_1.endstrip(rhs)), _rhs = _b[0], _arrayLength = _b[1];
+                    var _c = this.expandMacrosIn(file, line, index_1.endstrip(rhs2)), _rhs2 = _c[0], _ = _c[1];
+                    rhs = _rhs;
+                    rhs2 = _rhs2;
+                    arrayLength = _arrayLength;
                     break;
                 default:
                     throw new InternalError_1.InternalError("No operator: " + operation + " " + s);
@@ -737,14 +744,21 @@ var Compiler = (function () {
                 case "xor":
                 case "loadWhenEqual":
                 case "loadWhenNotEqual":
-                    if (atomic)
+                    if (atomic) {
                         expr = "Atomics." + CONST_1.OpAttr[operation].atomic + "(turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
-                    else if (synchronic)
+                    }
+                    else if (synchronic) {
                         expr = "turbo.Runtime." + CONST_1.OpAttr[operation].synchronic + "(" + ref + ", turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
-                    else if (simd)
+                    }
+                    else if (simd) {
                         expr = "SIMD." + simdType + ".store(turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
-                    else
+                    }
+                    else {
                         expr = "turbo.Runtime." + mem + "[" + ref + " >> " + shift + "] " + CONST_1.OpAttr[operation].vanilla + " " + rhs;
+                        if (arrayLength > -1) {
+                            expr += "turbo.Runtime." + mem + "[" + ref + " + 4 >> " + shift + "] = " + arrayLength;
+                        }
+                    }
                     break;
                 case "compareExchange":
                 case "expectUpdate":
@@ -856,7 +870,7 @@ var Compiler = (function () {
                 expr_1 = baseType + ".initInstance(" + expr_1 + ")";
             }
             return [left + expr_1 + s.substring(p + m.length),
-                left.length + expr_1.length];
+                left.length + expr_1.length, false];
         }
         var pp = new ParamParser_1.ParamParser(file, line, s, p + m.length);
         var as = pp.allArgs();
@@ -864,16 +878,22 @@ var Compiler = (function () {
             throw new ProgramError_1.ProgramError(file, line, "Wrong number of arguments to @new " + baseType + ".Array");
         // NOTE, parens removed here
         // Issue #16: Watch it: Parens interact with semicolon insertion.
-        var expr = "turbo.Runtime.allocOrThrow( (" + t.elementSize + " * " + this.expandMacrosIn(file, line, index_1.endstrip(as[0])) + "), " + t.elementAlign + ") /*Array*/";
+        //Array
+        //Change(6-10-16) : Added array length in header
+        //let expr = "turbo.Runtime.allocOrThrow( (" + t.elementSize + " * " + this.expandMacrosIn(file, line, endstrip(as[0])) + "), " + t.elementAlign + ") /*Array*/";
+        var array_len = this.expandMacrosIn(file, line, index_1.endstrip(as[0]));
+        var expr = "turbo.Runtime.allocOrThrow( 4 + ( " + t.elementSize + " * " + array_len + " ), " + t.elementAlign + ") /*Array*/";
         return [left + expr + s.substring(pp.where),
-            left.length + expr.length];
+            left.length + expr.length, array_len];
     };
     Compiler.prototype.expandMacrosIn = function (file, line, text) {
-        return this.myExec(file, line, CONST_1.new_re, this.newMacro.bind(this), this.myExec(file, line, CONST_1.arr_re, this.arrMacro.bind(this), this.myExec(file, line, CONST_1.acc_re, this.accMacro.bind(this), text)));
+        return this.myExec(file, line, CONST_1.new_re, this.newMacro.bind(this), this.myExec(file, line, CONST_1.arr_re, this.arrMacro.bind(this), this.myExec(file, line, CONST_1.acc_re, this.accMacro.bind(this), [text, -1])));
     };
-    Compiler.prototype.myExec = function (file, line, re, macro, text) {
+    Compiler.prototype.myExec = function (file, line, re, macro, _a) {
+        var text = _a[0], _ = _a[1];
         var old = re.lastIndex;
         re.lastIndex = 0;
+        var arrayLength;
         for (;;) {
             var m = re.exec(text);
             if (!m)
@@ -882,12 +902,14 @@ var Compiler = (function () {
             // the macro may eat additional input.  So the macro should
             // be returning a new string, as well as the index at which
             // to continue the search.
-            var _a = macro(file, line, text, re.lastIndex - m[0].length, m), newText = _a[0], newStart = _a[1];
+            var _b = macro(file, line, text, re.lastIndex - m[0].length, m), newText = _b[0], newStart = _b[1], _arrayLength = _b[2];
             text = newText;
             re.lastIndex = newStart;
+            arrayLength = _arrayLength;
         }
         re.lastIndex = old;
-        return text;
+        return [text, arrayLength];
+        // return text;
     };
     Compiler.prototype.replaceSetterShorthand = function (file, line, s, p, ms, t) {
         //return [s, p+m.length];

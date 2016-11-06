@@ -43,6 +43,11 @@ function MemoryError(msg) {
 
 MemoryError.prototype = new Error("Memory Error");
 
+interface FreeMemory{
+    ptr:number;
+    size:number;
+}
+
 export class RuntimeConstructor {
 
     NULL = 0;
@@ -67,6 +72,8 @@ export class RuntimeConstructor {
     _mem_float32 = null;
     _mem_float64 = null;
 
+    freeList:FreeMemory[] = [];
+    totalFreeMemory:number = 0;
 
     _now = (typeof 'performance' != 'undefined' && typeof performance.now == 'function' ?
         performance.now.bind(performance) :
@@ -182,6 +189,9 @@ export class RuntimeConstructor {
         // Drop it on the floor, for now
         // In the future: figure out the size from the header or other info,
         // add to free list, etc etc.
+        let type = this._idToType[this._mem_int32[p >> 2]];
+        this.totalFreeMemory += type.SIZE;
+        this.freeList.push({ptr:p, size:type.SIZE});
     }
 
     /*

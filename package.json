@@ -11,7 +11,8 @@
       ],
       "extensions": "js,tts",
       "ignore":[
-        "examples/array.compiled.js"
+        "examples/array.compiled.js",
+        "examples/turbo-runtime.js"
       ],
       "quiet": true
     }

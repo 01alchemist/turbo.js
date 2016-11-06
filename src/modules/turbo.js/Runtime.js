@@ -63,6 +63,8 @@ var RuntimeConstructor = (function () {
         this._mem_uint32 = null;
         this._mem_float32 = null;
         this._mem_float64 = null;
+        this.freeList = [];
+        this.totalFreeMemory = 0;
         this._now = (typeof 'performance' != 'undefined' && typeof performance.now == 'function' ?
             performance.now.bind(performance) :
             Date.now.bind(Date));
@@ -168,6 +170,9 @@ var RuntimeConstructor = (function () {
         // Drop it on the floor, for now
         // In the future: figure out the size from the header or other info,
         // add to free list, etc etc.
+        var type = this._idToType[this._mem_int32[p >> 2]];
+        this.totalFreeMemory += type.SIZE;
+        this.freeList.push({ ptr: p, size: type.SIZE });
     };
     /*
      * Given an pointer to a class instance, return its type object.
