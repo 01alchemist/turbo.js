@@ -402,7 +402,7 @@ var Compiler = (function () {
                         if (p > 0 && _this.isSubsequent(s.charAt(p - 1)))
                             return [s, p + m.length];
                         return _this.replaceSetterShorthand(file, line, s, p, m, t);
-                    }, [body[k], -1]), result = _d[0], _ = _d[1];
+                    }, [body[k], "-1"]), result = _d[0], _ = _d[1];
                     result = result.replace(CONST_1.self_accessor_re, function (m, path, operation, p, s) {
                         if (p > 0 && _this.isSubsequent(s.charAt(p - 1)))
                             return m;
@@ -616,7 +616,7 @@ var Compiler = (function () {
             var nlines = [];
             for (var _b = 0, lines_1 = lines; _b < lines_1.length; _b++) {
                 var l = lines_1[_b];
-                nlines.push(new SourceLine_1.SourceLine(l.file, l.line, this.expandMacrosIn(l.file, l.line, l.text)));
+                nlines.push(new SourceLine_1.SourceLine(l.file, l.line, this.expandMacrosIn(l.file, l.line, l.text)[0]));
             }
             source.lines = nlines;
         }
@@ -669,7 +669,8 @@ var Compiler = (function () {
         }
         ;
         // Issue #16: Watch it: Parens interact with semicolon insertion.
-        var ref = "(" + this.expandMacrosIn(file, line, index_1.endstrip(as[0])) + " + " + offset + ")";
+        var tmp = this.expandMacrosIn(file, line, index_1.endstrip(as[0]));
+        var ref = "(" + tmp[0] + " + " + offset + ")";
         if (operation == "ref") {
             return [left + ref + s.substring(pp.where),
                 left.length + ref.length];
@@ -710,7 +711,7 @@ var Compiler = (function () {
                     arrayLength = _arrayLength;
                     break;
                 case 3:
-                    var _b = this.expandMacrosIn(file, line, index_1.endstrip(rhs)), _rhs = _b[0], _arrayLength = _b[1];
+                    _b = this.expandMacrosIn(file, line, index_1.endstrip(rhs)), _rhs = _b[0], _arrayLength = _b[1];
                     var _c = this.expandMacrosIn(file, line, index_1.endstrip(rhs2)), _rhs2 = _c[0], _ = _c[1];
                     rhs = _rhs;
                     rhs2 = _rhs2;
@@ -755,8 +756,9 @@ var Compiler = (function () {
                     }
                     else {
                         expr = "turbo.Runtime." + mem + "[" + ref + " >> " + shift + "] " + CONST_1.OpAttr[operation].vanilla + " " + rhs;
-                        if (arrayLength > -1) {
-                            expr += "turbo.Runtime." + mem + "[" + ref + " + 4 >> " + shift + "] = " + arrayLength;
+                        if (arrayLength && arrayLength != "-1") {
+                            var _ref = ref.substr(0, ref.length - 1);
+                            expr += "\n\tturbo.Runtime." + mem + "[" + _ref + " + 4) >> " + shift + "] = " + arrayLength;
                         }
                     }
                     break;
@@ -787,7 +789,7 @@ var Compiler = (function () {
                     break;
                 case "set":
                     if (t.hasSetMethod)
-                        expr = t.name + "._set_impl(" + ref + ", " + this.expandMacrosIn(file, line, index_1.endstrip(rhs)) + ")";
+                        expr = t.name + "._set_impl(" + ref + ", " + this.expandMacrosIn(file, line, index_1.endstrip(rhs))[0] + ")";
                     break;
                 case "ref":
                     expr = ref;
@@ -801,6 +803,7 @@ var Compiler = (function () {
             //expr = `(${expr})`;
             return [left + expr + s.substring(pp.where), left.length + expr.length];
         }
+        var _b;
     };
     Compiler.prototype.arrMacro = function (file, line, s, p, ms) {
         var m = ms[0];
@@ -833,7 +836,7 @@ var Compiler = (function () {
             if (field)
                 return nomatch;
         }
-        var ref = "(  " + this.expandMacrosIn(file, line, index_1.endstrip(as[0])) + "+" + multiplier + "*" + this.expandMacrosIn(file, line, index_1.endstrip(as[1])) + ")";
+        var ref = "(  " + this.expandMacrosIn(file, line, index_1.endstrip(as[0]))[0] + "+" + multiplier + "*" + this.expandMacrosIn(file, line, index_1.endstrip(as[1]))[0] + ")";
         if (field) {
             var fld = type.findAccessibleFieldFor(operation, field);
             if (!fld)
@@ -870,7 +873,7 @@ var Compiler = (function () {
                 expr_1 = baseType + ".initInstance(" + expr_1 + ")";
             }
             return [left + expr_1 + s.substring(p + m.length),
-                left.length + expr_1.length, false];
+                left.length + expr_1.length, "-1"];
         }
         var pp = new ParamParser_1.ParamParser(file, line, s, p + m.length);
         var as = pp.allArgs();
@@ -881,13 +884,13 @@ var Compiler = (function () {
         //Array
         //Change(6-10-16) : Added array length in header
         //let expr = "turbo.Runtime.allocOrThrow( (" + t.elementSize + " * " + this.expandMacrosIn(file, line, endstrip(as[0])) + "), " + t.elementAlign + ") /*Array*/";
-        var array_len = this.expandMacrosIn(file, line, index_1.endstrip(as[0]));
+        var array_len = this.expandMacrosIn(file, line, index_1.endstrip(as[0]))[0];
         var expr = "turbo.Runtime.allocOrThrow( 4 + ( " + t.elementSize + " * " + array_len + " ), " + t.elementAlign + ") /*Array*/";
         return [left + expr + s.substring(pp.where),
             left.length + expr.length, array_len];
     };
     Compiler.prototype.expandMacrosIn = function (file, line, text) {
-        return this.myExec(file, line, CONST_1.new_re, this.newMacro.bind(this), this.myExec(file, line, CONST_1.arr_re, this.arrMacro.bind(this), this.myExec(file, line, CONST_1.acc_re, this.accMacro.bind(this), [text, -1])));
+        return this.myExec(file, line, CONST_1.new_re, this.newMacro.bind(this), this.myExec(file, line, CONST_1.arr_re, this.arrMacro.bind(this), this.myExec(file, line, CONST_1.acc_re, this.accMacro.bind(this), [text, "-1"])));
     };
     Compiler.prototype.myExec = function (file, line, re, macro, _a) {
         var text = _a[0], _ = _a[1];

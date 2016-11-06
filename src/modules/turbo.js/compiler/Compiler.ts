@@ -446,7 +446,7 @@ export class Compiler {
                             if (p > 0 && this.isSubsequent(s.charAt(p - 1))) return [s, p + m.length];
                             return this.replaceSetterShorthand(file, line, s, p, m, t);
                         },
-                        [body[k],-1]);
+                        [body[k],"-1"]);
                     result = result.replace(self_accessor_re, (m, path, operation, p, s) => {
                         if (p > 0 && this.isSubsequent(s.charAt(p - 1))) return m;
                         return t.name + path + "." + operation + "(SELF, ";
@@ -664,7 +664,7 @@ export class Compiler {
             let lines = source.lines;
             let nlines:SourceLine[] = [];
             for (let l of lines)
-                nlines.push(new SourceLine(l.file, l.line, this.expandMacrosIn(l.file, l.line, l.text)));
+                nlines.push(new SourceLine(l.file, l.line, this.expandMacrosIn(l.file, l.line, l.text)[0]));
             source.lines = nlines;
         }
     }
@@ -727,7 +727,8 @@ export class Compiler {
         ;
 
         // Issue #16: Watch it: Parens interact with semicolon insertion.
-        let ref = `(${this.expandMacrosIn(file, line, endstrip(as[0]))} + ${offset})`;
+        let tmp = this.expandMacrosIn(file, line, endstrip(as[0]));
+        let ref = `(${tmp[0]} + ${offset})`;
         if (operation == "ref") {
             return [left + ref + s.substring(pp.where),
                 left.length + ref.length];
@@ -740,7 +741,7 @@ export class Compiler {
                 ref:string, type:Defn, s:string, left:string, operation:string, pp:ParamParser,
                 rhs:string, rhs2:string, nomatch:[string,number]):[string,number] {
         let mem = "", size = 0, synchronic = false, atomic = false, simd = false, shift = -1, simdType = "";
-        let arrayLength:number;
+        let arrayLength:string;
         if (type.kind == DefnKind.Primitive) {
             let prim = <PrimitiveDefn> type;
             mem = prim.memory;
@@ -772,7 +773,7 @@ export class Compiler {
                     arrayLength = _arrayLength;
                     break;
                 case 3:
-                    let [_rhs, _arrayLength] = this.expandMacrosIn(file, line, endstrip(rhs));
+                    [_rhs, _arrayLength] = this.expandMacrosIn(file, line, endstrip(rhs));
                     let [_rhs2, _] = this.expandMacrosIn(file, line, endstrip(rhs2));
                     rhs = _rhs;
                     rhs2 = _rhs2;
@@ -814,8 +815,9 @@ export class Compiler {
                         expr = `SIMD.${simdType}.store(turbo.Runtime.${mem}, ${fieldIndex}, ${rhs})`;
                     }else {
                         expr = `turbo.Runtime.${mem}[${ref} >> ${shift}] ${OpAttr[operation].vanilla} ${rhs}`;
-                        if(arrayLength > -1){
-                            expr += `turbo.Runtime.${mem}[${ref} + 4 >> ${shift}] = ${arrayLength}`;
+                        if(arrayLength && arrayLength != "-1"){
+                            let _ref = ref.substr(0,ref.length-1);
+                            expr += `\n\tturbo.Runtime.${mem}[${_ref} + 4) >> ${shift}] = ${arrayLength}`;
                         }
 
                     }
@@ -847,7 +849,7 @@ export class Compiler {
                     break;
                 case "set":
                     if (t.hasSetMethod)
-                        expr = `${t.name}._set_impl(${ref}, ${this.expandMacrosIn(file, line, endstrip(rhs))})`;
+                        expr = `${t.name}._set_impl(${ref}, ${this.expandMacrosIn(file, line, endstrip(rhs))[0]})`;
                     break;
                 case "ref":
                     expr = ref;
@@ -899,7 +901,7 @@ export class Compiler {
             if (field)
                 return nomatch;
         }
-        let ref = "(  " + this.expandMacrosIn(file, line, endstrip(as[0])) + "+" + multiplier + "*" + this.expandMacrosIn(file, line, endstrip(as[1])) + ")";
+        let ref = "(  " + this.expandMacrosIn(file, line, endstrip(as[0]))[0] + "+" + multiplier + "*" + this.expandMacrosIn(file, line, endstrip(as[1]))[0] + ")";
         if (field) {
             let fld = (<StructDefn> type).findAccessibleFieldFor(operation, field);
             if (!fld)
@@ -919,7 +921,7 @@ export class Compiler {
 
 // Since @new is new syntax, we throw errors for all misuse.
 
-    newMacro(file:string, line:number, s:string, p:number, ms:RegExpExecArray):[string,number] {
+    newMacro(file:string, line:number, s:string, p:number, ms:RegExpExecArray):[string,number,string] {
         let m = ms[0];
         let baseType = ms[1];
         let qualifier = ms[2];
@@ -942,7 +944,7 @@ export class Compiler {
                 expr = baseType + ".initInstance(" + expr + ")";
             }
             return [left + expr + s.substring(p + m.length),
-                left.length + expr.length, false];
+                left.length + expr.length, "-1"];
         }
 
         let pp = new ParamParser(file, line, s, p + m.length);
@@ -955,23 +957,23 @@ export class Compiler {
         //Array
         //Change(6-10-16) : Added array length in header
         //let expr = "turbo.Runtime.allocOrThrow( (" + t.elementSize + " * " + this.expandMacrosIn(file, line, endstrip(as[0])) + "), " + t.elementAlign + ") /*Array*/";
-        let array_len = this.expandMacrosIn(file, line, endstrip(as[0]));
+        let [array_len] = this.expandMacrosIn(file, line, endstrip(as[0]));
         let expr = `turbo.Runtime.allocOrThrow( 4 + ( ${t.elementSize} * ${array_len} ), ${t.elementAlign}) /*Array*/`;
         return [left + expr + s.substring(pp.where),
             left.length + expr.length, array_len];
     }
 
-    expandMacrosIn(file:string, line:number, text:string):[string, number] {
+    expandMacrosIn(file:string, line:number, text:string):[string, string] {
         return this.myExec(
             file, line, new_re, this.newMacro.bind(this),
             this.myExec(
                 file, line, arr_re, this.arrMacro.bind(this),
-                this.myExec(file, line, acc_re, this.accMacro.bind(this), [text, -1])
+                this.myExec(file, line, acc_re, this.accMacro.bind(this), [text, "-1"])
             )
         );
     }
 
-    myExec(file:string, line:number, re:RegExp, macro:(fn:string, l:number, s:string, p:number, m:RegExpExecArray)=>[string,number], [text,_]):[string,number] {
+    myExec(file:string, line:number, re:RegExp, macro:(fn:string, l:number, s:string, p:number, m:RegExpExecArray)=>[string,number,string], [text,_]):[string,string] {
         let old = re.lastIndex;
         re.lastIndex = 0;
         let arrayLength;

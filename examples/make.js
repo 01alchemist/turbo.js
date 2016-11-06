@@ -29,6 +29,7 @@ compiler.compile({
 fs.unlinkSync(path.resolve(__dirname, "array.compiled.tts"));
 
 //Compile TypeScript
+/*
 const spawn = require('child_process').spawn;
 const ls = spawn('tsc', [
     __dirname + '/array.compiled.ts',
@@ -48,3 +49,4 @@ ls.stderr.on('data', (data) => {
 ls.on('close', (code) => {
     console.log(`child process exited with code ${code}`);
 });
+*/

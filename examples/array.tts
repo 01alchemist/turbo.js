@@ -57,6 +57,7 @@ type float64 = number;
     @method init(SELF, width:number, height:number){
         
         SELF.data = @new RGBA.Array(2 * 2);
+        let a = RGBA.Array.at(SELF.data, i);
         return SELF;
     }
 

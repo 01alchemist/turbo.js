@@ -9,7 +9,7 @@
         "examples",
         "src/modules/turbo.js/compiler"
       ],
-      "extensions": "js,tts",
+      "extensions": "tts",
       "ignore":[
         "examples/array.compiled.js",
         "examples/turbo-runtime.js"
