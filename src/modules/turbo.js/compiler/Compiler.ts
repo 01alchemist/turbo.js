@@ -724,7 +724,6 @@ export class Compiler {
             this.warning(file, line, `Bad accessor arity ${propName} / ${as.length}: ` + s);
             return nomatch;
         }
-        ;
 
         // Issue #16: Watch it: Parens interact with semicolon insertion.
         let tmp = this.expandMacrosIn(file, line, endstrip(as[0]));
@@ -796,6 +795,14 @@ export class Compiler {
                     else
                         expr = `turbo.Runtime.${mem}[${fieldIndex}]`;
                     break;
+                case "len":
+                    if (atomic || synchronic)
+                        expr = `Atomics.load(turbo.Runtime.${mem}, ${fieldIndex})`;
+                    else if (simd)
+                        expr = `SIMD.${simdType}.load(turbo.Runtime.${mem}, ${fieldIndex})`;
+                    else
+                        expr = `turbo.Runtime.${mem}[${fieldIndex}]`;
+                    break;
                 case "notify":
                     expr = `turbo.Runtime.${OpAttr[operation].synchronic}(${ref})`;
                     break;
@@ -816,8 +823,14 @@ export class Compiler {
                     }else {
                         expr = `turbo.Runtime.${mem}[${ref} >> ${shift}] ${OpAttr[operation].vanilla} ${rhs}`;
                         if(arrayLength && arrayLength != "-1"){
-                            let _ref = ref.substr(0,ref.length-1);
-                            expr += `\n\tturbo.Runtime.${mem}[${_ref} + 4) >> ${shift}] = ${arrayLength}`;
+                            // let _ref = ref.substr(0,ref.length-1);
+                            // let _tmp = _ref.substr(_ref.lastIndexOf(" "), _ref.length);
+                            // _ref = _ref.substr(0, _ref.lastIndexOf(" "));
+                            // let _ref_shift = parseInt(_tmp) + 4;
+                            // _ref = _ref + " " +_ref_shift;
+                            // expr += `\n\tturbo.Runtime.${mem}[${_ref}) >> ${shift}] = ${arrayLength}`;
+                            // arrayLength = eval(arrayLength);
+                            expr += `\n        turbo.Runtime.${mem}[(turbo.Runtime.${mem}[${ref} >> 2]) >> 2] = ${arrayLength}`
                         }
 
                     }
@@ -887,6 +900,17 @@ export class Compiler {
         let pp = new ParamParser(file, line, s, p + m.length);
         let as = (pp).allArgs();
 
+        if(operation == "len"){
+            let [array_ref,_] = this.expandMacrosIn(file, line, endstrip(as[0]));
+            // let _ref = array_ref.substr(0,array_ref.lastIndexOf(") >> 2]"));
+            // let _tmp = _ref.substr(_ref.lastIndexOf(" "), _ref.length);
+            // _ref = _ref.substr(0, _ref.lastIndexOf(" "));
+            // let _ref_shift = parseInt(_tmp);
+            // _ref = _ref + " " +_ref_shift + ") >> 2])";
+
+            return this.loadFromRef(file, line, array_ref, type, s, s.substring(0, p), operation, pp, as[2], as[3], nomatch);
+        }
+
         if (as.length != OpAttr[operation].arity + 1) {
             this.warning(file, line, `Wrong arity for accessor ${operation} / ${as.length}`);
             return nomatch;
@@ -901,7 +925,20 @@ export class Compiler {
             if (field)
                 return nomatch;
         }
-        let ref = "(  " + this.expandMacrosIn(file, line, endstrip(as[0]))[0] + "+" + multiplier + "*" + this.expandMacrosIn(file, line, endstrip(as[1]))[0] + ")";
+        let [array_ref] = this.expandMacrosIn(file, line, endstrip(as[0]));
+
+        // let _ref = array_ref.substr(0,array_ref.lastIndexOf(") >> 2]"));
+        // let _tmp = _ref.substr(_ref.lastIndexOf(" "), _ref.length);
+        // _ref = _ref.substr(0, _ref.lastIndexOf(" "));
+        // let _ref_shift = parseInt(_tmp) + 4;
+        // _ref = _ref + " " +_ref_shift + ") >> 2])";
+
+        //we are storing array length in first 4 bytes
+        let index = this.expandMacrosIn(file, line, endstrip(as[1]))[0];
+        // let mul_index = multiplier * parseInt(index);
+        // let ref = "(  " + _ref + " + " + multiplier + " * " + index + "  )";
+        let ref = "(  " + array_ref + " + 4 + (" + multiplier + " * " + index + ")  )";
+
         if (field) {
             let fld = (<StructDefn> type).findAccessibleFieldFor(operation, field);
             if (!fld)
@@ -958,9 +995,14 @@ export class Compiler {
         //Change(6-10-16) : Added array length in header
         //let expr = "turbo.Runtime.allocOrThrow( (" + t.elementSize + " * " + this.expandMacrosIn(file, line, endstrip(as[0])) + "), " + t.elementAlign + ") /*Array*/";
         let [array_len] = this.expandMacrosIn(file, line, endstrip(as[0]));
-        let expr = `turbo.Runtime.allocOrThrow( 4 + ( ${t.elementSize} * ${array_len} ), ${t.elementAlign}) /*Array*/`;
-        return [left + expr + s.substring(pp.where),
-            left.length + expr.length, array_len];
+        // let expr = `turbo.Runtime.allocOrThrow( 4 + ( ${t.elementSize} * ${array_len} ), ${t.elementAlign}) /*Array*/`;
+        // let arraySize = eval(`4 + ( ${t.elementSize} * ${array_len} )`);
+        let expr = `turbo.Runtime.allocOrThrow( 4 + ( ${t.elementSize} * ${array_len} ), ${t.elementAlign} ) /*Array*/`;
+        let line1 = left + expr + s.substring(pp.where);
+        let propName = left.match(/[\w]+/gi);
+        propName = propName[propName.length-1];
+        let line2 = `\n        turbo.Runtime._mem_int32[${propName} >> 2] = ${array_len};`;
+        return [line1 + line2, left.length + expr.length, array_len];
     }
 
     expandMacrosIn(file:string, line:number, text:string):[string, string] {
@@ -990,7 +1032,7 @@ export class Compiler {
             re.lastIndex = newStart;
             arrayLength = _arrayLength;
         }
-
+        // arrayLength = isNaN(parseInt(arrayLength))?"-1":arrayLength;
         re.lastIndex = old;
         return [text, arrayLength];
         // return text;

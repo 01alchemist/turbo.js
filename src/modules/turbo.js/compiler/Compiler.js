@@ -667,7 +667,6 @@ var Compiler = (function () {
             this.warning(file, line, ("Bad accessor arity " + propName + " / " + as.length + ": ") + s);
             return nomatch;
         }
-        ;
         // Issue #16: Watch it: Parens interact with semicolon insertion.
         var tmp = this.expandMacrosIn(file, line, index_1.endstrip(as[0]));
         var ref = "(" + tmp[0] + " + " + offset + ")";
@@ -734,6 +733,14 @@ var Compiler = (function () {
                     else
                         expr = "turbo.Runtime." + mem + "[" + fieldIndex + "]";
                     break;
+                case "len":
+                    if (atomic || synchronic)
+                        expr = "Atomics.load(turbo.Runtime." + mem + ", " + fieldIndex + ")";
+                    else if (simd)
+                        expr = "SIMD." + simdType + ".load(turbo.Runtime." + mem + ", " + fieldIndex + ")";
+                    else
+                        expr = "turbo.Runtime." + mem + "[" + fieldIndex + "]";
+                    break;
                 case "notify":
                     expr = "turbo.Runtime." + CONST_1.OpAttr[operation].synchronic + "(" + ref + ")";
                     break;
@@ -757,8 +764,14 @@ var Compiler = (function () {
                     else {
                         expr = "turbo.Runtime." + mem + "[" + ref + " >> " + shift + "] " + CONST_1.OpAttr[operation].vanilla + " " + rhs;
                         if (arrayLength && arrayLength != "-1") {
-                            var _ref = ref.substr(0, ref.length - 1);
-                            expr += "\n\tturbo.Runtime." + mem + "[" + _ref + " + 4) >> " + shift + "] = " + arrayLength;
+                            // let _ref = ref.substr(0,ref.length-1);
+                            // let _tmp = _ref.substr(_ref.lastIndexOf(" "), _ref.length);
+                            // _ref = _ref.substr(0, _ref.lastIndexOf(" "));
+                            // let _ref_shift = parseInt(_tmp) + 4;
+                            // _ref = _ref + " " +_ref_shift;
+                            // expr += `\n\tturbo.Runtime.${mem}[${_ref}) >> ${shift}] = ${arrayLength}`;
+                            // arrayLength = eval(arrayLength);
+                            expr += "\n        turbo.Runtime." + mem + "[(turbo.Runtime." + mem + "[" + ref + " >> 2]) >> 2] = " + arrayLength;
                         }
                     }
                     break;
@@ -823,6 +836,15 @@ var Compiler = (function () {
             return nomatch;
         var pp = new ParamParser_1.ParamParser(file, line, s, p + m.length);
         var as = (pp).allArgs();
+        if (operation == "len") {
+            var _a = this.expandMacrosIn(file, line, index_1.endstrip(as[0])), array_ref_1 = _a[0], _ = _a[1];
+            // let _ref = array_ref.substr(0,array_ref.lastIndexOf(") >> 2]"));
+            // let _tmp = _ref.substr(_ref.lastIndexOf(" "), _ref.length);
+            // _ref = _ref.substr(0, _ref.lastIndexOf(" "));
+            // let _ref_shift = parseInt(_tmp);
+            // _ref = _ref + " " +_ref_shift + ") >> 2])";
+            return this.loadFromRef(file, line, array_ref_1, type, s, s.substring(0, p), operation, pp, as[2], as[3], nomatch);
+        }
         if (as.length != CONST_1.OpAttr[operation].arity + 1) {
             this.warning(file, line, "Wrong arity for accessor " + operation + " / " + as.length);
             return nomatch;
@@ -836,7 +858,17 @@ var Compiler = (function () {
             if (field)
                 return nomatch;
         }
-        var ref = "(  " + this.expandMacrosIn(file, line, index_1.endstrip(as[0]))[0] + "+" + multiplier + "*" + this.expandMacrosIn(file, line, index_1.endstrip(as[1]))[0] + ")";
+        var array_ref = this.expandMacrosIn(file, line, index_1.endstrip(as[0]))[0];
+        // let _ref = array_ref.substr(0,array_ref.lastIndexOf(") >> 2]"));
+        // let _tmp = _ref.substr(_ref.lastIndexOf(" "), _ref.length);
+        // _ref = _ref.substr(0, _ref.lastIndexOf(" "));
+        // let _ref_shift = parseInt(_tmp) + 4;
+        // _ref = _ref + " " +_ref_shift + ") >> 2])";
+        //we are storing array length in first 4 bytes
+        var index = this.expandMacrosIn(file, line, index_1.endstrip(as[1]))[0];
+        // let mul_index = multiplier * parseInt(index);
+        // let ref = "(  " + _ref + " + " + multiplier + " * " + index + "  )";
+        var ref = "(  " + array_ref + " + 4 + (" + multiplier + " * " + index + ")  )";
         if (field) {
             var fld = type.findAccessibleFieldFor(operation, field);
             if (!fld)
@@ -885,9 +917,14 @@ var Compiler = (function () {
         //Change(6-10-16) : Added array length in header
         //let expr = "turbo.Runtime.allocOrThrow( (" + t.elementSize + " * " + this.expandMacrosIn(file, line, endstrip(as[0])) + "), " + t.elementAlign + ") /*Array*/";
         var array_len = this.expandMacrosIn(file, line, index_1.endstrip(as[0]))[0];
-        var expr = "turbo.Runtime.allocOrThrow( 4 + ( " + t.elementSize + " * " + array_len + " ), " + t.elementAlign + ") /*Array*/";
-        return [left + expr + s.substring(pp.where),
-            left.length + expr.length, array_len];
+        // let expr = `turbo.Runtime.allocOrThrow( 4 + ( ${t.elementSize} * ${array_len} ), ${t.elementAlign}) /*Array*/`;
+        // let arraySize = eval(`4 + ( ${t.elementSize} * ${array_len} )`);
+        var expr = "turbo.Runtime.allocOrThrow( 4 + ( " + t.elementSize + " * " + array_len + " ), " + t.elementAlign + " ) /*Array*/";
+        var line1 = left + expr + s.substring(pp.where);
+        var propName = left.match(/[\w]+/gi);
+        propName = propName[propName.length - 1];
+        var line2 = "\n        turbo.Runtime._mem_int32[" + propName + " >> 2] = " + array_len + ";";
+        return [line1 + line2, left.length + expr.length, array_len];
     };
     Compiler.prototype.expandMacrosIn = function (file, line, text) {
         return this.myExec(file, line, CONST_1.new_re, this.newMacro.bind(this), this.myExec(file, line, CONST_1.arr_re, this.arrMacro.bind(this), this.myExec(file, line, CONST_1.acc_re, this.accMacro.bind(this), [text, "-1"])));
@@ -910,6 +947,7 @@ var Compiler = (function () {
             re.lastIndex = newStart;
             arrayLength = _arrayLength;
         }
+        // arrayLength = isNaN(parseInt(arrayLength))?"-1":arrayLength;
         re.lastIndex = old;
         return [text, arrayLength];
         // return text;

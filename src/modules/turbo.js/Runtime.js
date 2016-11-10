@@ -325,7 +325,11 @@ exports.turbo = {
         this.Runtime.init(RAW_MEMORY, 0, RAW_MEMORY.byteLength, true);
     },
     getMemoryUsage: function () {
-        return Math.round(Atomics.load(this.Runtime._mem_int32, 1) / (1024 * 1024)) + "MB";
+        var top = Atomics.load(this.Runtime._mem_int32, 1);
+        top -= this.Runtime.totalFreeMemory;
+        var usage = top / (1024 * 1024);
+        var mb = Math.round(usage);
+        return (mb == 0 ? usage : mb) + "MB";
     }
 };
 exports.unsafe = {
@@ -342,6 +346,15 @@ window["unsafe"] = exports.unsafe;
 // since the buffer must be zero-initialized by the client code
 // and this is a simple bump allocator.
 function alloc_sab(nbytes, alignment) {
+    var _this = this;
+    if (this.totalFreeMemory > nbytes) {
+        this.freeList.forEach(function (freeMem, index) {
+            if (freeMem.size == nbytes) {
+                _this.freeList.splice(index, 1);
+                return freeMem.ptr;
+            }
+        });
+    }
     do {
         var p = Atomics.load(this._mem_int32, 1);
         var q = (p + (alignment - 1)) & ~(alignment - 1);

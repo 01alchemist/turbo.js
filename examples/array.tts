@@ -1,25 +1,6 @@
-turbo.init(1024);
+turbo.init(32);
 
 type float64 = number;
-
-@turbo struct S1{
-    A:uint8
-} @end
-
-@turbo class D1{
-    A:RGBA.Array
-
-    @method init(SELF){
-        SELF.A = @new RGBA.Array(4);
-        return SELF;
-    }
-    static New(){
-        return D1.init(@new D1);
-    }
-    static _A(SELF){
-        return SELF.A;
-    }
-} @end
 
 @turbo class RGBA{
 
@@ -28,11 +9,12 @@ type float64 = number;
     B:float64
     A:float64
 
-    @method init(SELF:number, r,g,b,a){
+    @method init(SELF:number, r=0,g=0,b=0,a=0){
         SELF.R = r;
         SELF.G = g;
         SELF.B = b;
         SELF.A = a;
+        return SELF;
     }
 
     static rgba(SELF:number){
@@ -46,42 +28,65 @@ type float64 = number;
 
 } @end
 
-
 @turbo class Bitmap{
 
     Width:int32
     Height:int32
-    length:int32
     data:RGBA.Array
 
     @method init(SELF, width:number, height:number){
-        
-        SELF.data = @new RGBA.Array(2 * 2);
-        let a = RGBA.Array.at(SELF.data, i);
+
+        SELF.Width = width;
+        SELF.Height = height;
+        let size = width * height;
+        let _data = @new RGBA.Array(size);
+
+        for(let y=0;y<height;y++){
+            for(let x=0;x<width;x++){
+                let index:number = (y * width) + x;
+                RGBA.Array.setAt(_data, index, RGBA.init(@new RGBA));
+            }
+        }
+
+        SELF.data = _data;
+
         return SELF;
     }
 
-    static NewBitmap(){
-        return Bitmap.init(@new Bitmap);
+    static NewBitmap(w:number, h:number):number{
+        return Bitmap.init(@new Bitmap, w, h);
     }
 
-    static Length(SELF:number):number{
-        //return RGBA.Array.len(SELF);
+    static Length(SELF):number{
+
+        let data = SELF.data;
+
+        return RGBA.Array.len(data);
     }
 
-    static setPixel(SELF:number, x:number, y:number, rgba):number{
-        let index:number = (y * (16 * 4)) + (x * 4);
+    static setPixel(SELF, x:number, y:number, rgba):number{
+        let index:number = (y * SELF.Width) + x;
         let _rgba = @new RGBA;
         RGBA.init(_rgba, rgba.r, rgba.g, rgba.b, rgba.a);
         return RGBA.Array.setAt(SELF.data, index, _rgba);
     }
 
-    static getPixel(SELF:number, x:number, y:number){
-        let index:number = (y * (16 * 4)) + (x * 4);
+    static getPixel(SELF, x:number, y:number){
+        if(x > SELF.Width - 1 || y > SELF.Height - 1){
+            throw new RangeError("You are trying to access out of range pixel");
+        }
+        let index:number = (y * SELF.Width) + x;
         return RGBA.rgba(RGBA.Array.at(SELF.data, index));
     }
     static distroy(SELF){
-        
+        let width = SELF.Width;
+        for(let y=0;y < SELF.Height;y++){
+            for(let x=0;x < width;x++){
+                let index:number = (y * width) + x;
+                turbo.Runtime.free(RGBA.Array.at(SELF.data, index));
+            }
+        }
+        turbo.Runtime.free(SELF);
     }
 
 } @end

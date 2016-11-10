@@ -11,7 +11,7 @@ exports.Rbrace = exports.Os + "\\}";
 exports.LParen = exports.Os + "\\(";
 exports.CommentOpt = exports.Os + "(?:\\/\\/.*)?";
 exports.QualifierOpt = "(?:\\.(atomic|synchronic))?";
-exports.OpNames = "at|get|setAt|set|ref|add|sub|and|or|xor|compareExchange|loadWhenEqual|loadWhenNotEqual|expectUpdate|notify";
+exports.OpNames = "len|at|get|setAt|set|ref|add|sub|and|or|xor|compareExchange|loadWhenEqual|loadWhenNotEqual|expectUpdate|notify";
 exports.Operation = "(?:\\.(" + exports.OpNames + "))";
 exports.OperationOpt = exports.Operation + "?";
 exports.OperationLParen = "(?:\\.(" + exports.OpNames + ")" + exports.LParen + ")";
@@ -84,6 +84,7 @@ exports.AssignmentOps = {
     "^=": "xor"
 };
 exports.OpAttr = {
+    "len": { arity: 1, atomic: "load", synchronic: "" },
     "get": { arity: 1, atomic: "load", synchronic: "" },
     "ref": { arity: 1, atomic: "", synchronic: "" },
     "notify": { arity: 1, atomic: "", synchronic: "_synchronicNotify" },

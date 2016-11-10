@@ -9,7 +9,11 @@
     <script src="turbo-runtime.js"></script>
     <script src="array.compiled.js"></script>
     <script>
-
+        var bitmap = Bitmap.NewBitmap(512, 512);
+        console.log(Bitmap.Length(bitmap));
+        console.log(turbo.getMemoryUsage());
+        Bitmap.distroy(bitmap);
+        console.log(turbo.getMemoryUsage());
     </script>
 </head>
 <body>

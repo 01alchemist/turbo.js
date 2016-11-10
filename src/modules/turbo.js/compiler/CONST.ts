@@ -10,7 +10,7 @@ export const Rbrace = Os + "\\}";
 export const LParen = Os + "\\(";
 export const CommentOpt = Os + "(?:\\/\\/.*)?";
 export const QualifierOpt = "(?:\\.(atomic|synchronic))?"
-export const OpNames = "at|get|setAt|set|ref|add|sub|and|or|xor|compareExchange|loadWhenEqual|loadWhenNotEqual|expectUpdate|notify";
+export const OpNames = "len|at|get|setAt|set|ref|add|sub|and|or|xor|compareExchange|loadWhenEqual|loadWhenNotEqual|expectUpdate|notify";
 export const Operation = "(?:\\.(" + OpNames + "))";
 export const OperationOpt = Operation + "?";
 export const OperationLParen = "(?:\\.(" + OpNames + ")" + LParen + ")";
@@ -98,6 +98,7 @@ export const AssignmentOps =
     "^=": "xor"
 };
 export const OpAttr = {
+    "len": {arity: 1, atomic: "load", synchronic: ""},
     "get": {arity: 1, atomic: "load", synchronic: ""},
     "ref": {arity: 1, atomic: "", synchronic: ""},
     "notify": {arity: 1, atomic: "", synchronic: "_synchronicNotify"},
