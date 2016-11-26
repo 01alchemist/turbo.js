@@ -1,3 +1,7 @@
+declare var turbo:{
+
+};
+
 class MemoryObject {
 
    private _pointer:number;
