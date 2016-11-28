@@ -1,5 +1,5 @@
 declare var turbo:{
-
+    Runtime:any
 };
 
 class MemoryObject {

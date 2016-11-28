@@ -21,7 +21,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "npm-watch",
     "make-turbo": "node examples/make.js",
-    "build-project": "node_modules/typescript/bin/tsc -p ./src/modules/turbo.js",
+    "build-project": "tsc -p ./src/modules/turbo.js",
     "watch-project": "tsc -w -p ./src/modules/turbo.js",
     "build-runtime": "tsc ./src/modules/turbo.js/Runtime.ts -m commonjs -d --outDir ./src/modules/turbo.js/bundle/",
     "watch-compiler": "tsc -w ./src/modules/turbo.js/compiler/Compiler.ts -t ES5 -m commonjs -d --outFile ./src/modules/turbo.js/bundle/Compiler.js",
