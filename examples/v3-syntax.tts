@@ -8,14 +8,15 @@ type uint8 = number;
 type uint16 = number;
 type uint32 = number;
 
-export class ParallelObject{
-    SIZE:number;
-    ALIGN:number;
-    private _pointer:number;
-    get pointer():number {
+export class TurboObject {
+    SIZE: number;
+    ALIGN: number;
+    private _pointer: number;
+    get pointer(): number {
         return this._pointer;
     }
-    constructor(){
+
+    constructor() {
 
     }
 }
@@ -23,37 +24,53 @@ export class ParallelObject{
 //Turbo object
 @turbo
 export class Vector{
-    x:float64;
-    y:float64;
-    z:float64;
+    x: float64;
+    y: float64;
+    z: float64;
+
+    /**
+     *
+     * @param SELF is memory pointer to vector object
+     * @param x
+     * @param y
+     * @param z
+     */
+    static init(SELF, x: float64 = 0, y: float64 = 0, z: float64 = 0) {
+        SELF.x = x;
+        SELF.y = y;
+        SELF.z = z;
+    }
+
+    static add(SELF, v2: Vector) {
+        return new Vector(SELF.x + v2.x, SELF.y + v2.y, SELF.z + v2.z);
+    }
+
 }
 
 
 @turbo
 export class Triangle{
 
-    constructor(
-        public v1:Vector,
-        public v2:Vector,
-        public v3:Vector,
-        public n1:Vector,
-        public n2:Vector,
-        public n3:Vector,
-        public t1:Vector,
-        public t2:Vector,
-        public t3:Vector
-    ){
+    constructor(public v1: Vector,
+                public v2: Vector,
+                public v3: Vector,
+                public n1: Vector,
+                public n2: Vector,
+                public n3: Vector,
+                public t1: Vector,
+                public t2: Vector,
+                public t3: Vector) {
 
     }
-
 }
 
 @turbo
 export class Mesh{
 
-    constructor(public triangles:Triangle[]){
+    constructor(public triangles: Triangle[]) {
 
     }
 }
 
-function turbo(){}
+function turbo() {
+}
