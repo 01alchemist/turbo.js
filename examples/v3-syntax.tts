@@ -1,0 +1,59 @@
+//Turbo types
+type float32 = number;
+type float64 = number;
+type int8 = number;
+type int16 = number;
+type int32 = number;
+type uint8 = number;
+type uint16 = number;
+type uint32 = number;
+
+export class ParallelObject{
+    SIZE:number;
+    ALIGN:number;
+    private _pointer:number;
+    get pointer():number {
+        return this._pointer;
+    }
+    constructor(){
+
+    }
+}
+
+//Turbo object
+@turbo
+export class Vector{
+    x:float64;
+    y:float64;
+    z:float64;
+}
+
+
+@turbo
+export class Triangle{
+
+    constructor(
+        public v1:Vector,
+        public v2:Vector,
+        public v3:Vector,
+        public n1:Vector,
+        public n2:Vector,
+        public n3:Vector,
+        public t1:Vector,
+        public t2:Vector,
+        public t3:Vector
+    ){
+
+    }
+
+}
+
+@turbo
+export class Mesh{
+
+    constructor(public triangles:Triangle[]){
+
+    }
+}
+
+function turbo(){}
