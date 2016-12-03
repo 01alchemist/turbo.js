@@ -28,17 +28,10 @@ export class Vector{
     y: float64;
     z: float64;
 
-    /**
-     *
-     * @param SELF is memory pointer to vector object
-     * @param x
-     * @param y
-     * @param z
-     */
-    static init(SELF, x: float64 = 0, y: float64 = 0, z: float64 = 0) {
-        SELF.x = x;
-        SELF.y = y;
-        SELF.z = z;
+    constructor(x: float64 = 0, y: float64 = 0, z: float64 = 0) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
     }
 
     static add(SELF, v2: Vector) {
