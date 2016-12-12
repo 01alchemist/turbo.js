@@ -26,7 +26,7 @@ var Defn = (function () {
     Defn.pointerSize = 4;
     Defn.pointerAlign = 4;
     Defn.pointerTypeName = "int32";
-    Defn.pointerMemName = "_mem_int32";
+    Defn.pointerMemName = "_mem_i32";
     return Defn;
 }());
 exports.Defn = Defn;

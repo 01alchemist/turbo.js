@@ -624,7 +624,7 @@ export class Compiler {
                         emitLine = d.line;
                         let signature = virtual.signature();
                         push("    static " + virtual.name + "(SELF " + signature + ") {");
-                        push("        switch (turbo.Runtime._mem_int32[SELF>>2]) {");
+                        push("        switch (turbo.Runtime._mem_i32[SELF>>2]) {");
                         let kv = virtual.reverseCases.keysValues();
                         for (let [name,cases]=kv.next(); name; [name, cases] = kv.next()) {
                             for (let c of cases)
@@ -644,8 +644,8 @@ export class Compiler {
 
                 if (d.kind == DefnKind.Class) {
                     let cls = <ClassDefn> d;
-                    //push(d.name + ".initInstance = function(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
-                    push("    static initInstance(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
+                    //push(d.name + ".initInstance = function(SELF) { turbo.Runtime._mem_i32[SELF>>2]=" + cls.classId + "; return SELF; }");
+                    push("    static initInstance(SELF) { turbo.Runtime._mem_i32[SELF>>2]=" + cls.classId + "; return SELF; }");
                 }
 
                 push("}");
@@ -1001,7 +1001,7 @@ export class Compiler {
         let line1 = left + expr + s.substring(pp.where);
         let propName = left.match(/[\w]+/gi);
         propName = propName[propName.length-1];
-        let line2 = `\n        turbo.Runtime._mem_int32[${propName} >> 2] = ${array_len};`;
+        let line2 = `\n        turbo.Runtime._mem_i32[${propName} >> 2] = ${array_len};`;
         return [line1 + line2, left.length + expr.length, array_len];
     }
 

@@ -20,5 +20,5 @@ export class Defn {
     static pointerSize = 4;
     static pointerAlign = 4;
     static pointerTypeName = "int32";
-    static pointerMemName = "_mem_int32";
+    static pointerMemName = "_mem_i32";
 }
