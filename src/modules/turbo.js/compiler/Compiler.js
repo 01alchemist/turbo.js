@@ -576,7 +576,7 @@ var Compiler = (function () {
                         emitLine = d.line;
                         var signature = virtual.signature();
                         push("    static " + virtual.name + "(SELF " + signature + ") {");
-                        push("        switch (turbo.Runtime._mem_int32[SELF>>2]) {");
+                        push("        switch (turbo.Runtime._mem_i32[SELF>>2]) {");
                         var kv = virtual.reverseCases.keysValues();
                         for (var _o = kv.next(), name_2 = _o[0], cases = _o[1]; name_2; (_p = kv.next(), name_2 = _p[0], cases = _p[1], _p)) {
                             for (var _q = 0, cases_1 = cases; _q < cases_1.length; _q++) {
@@ -596,8 +596,8 @@ var Compiler = (function () {
                 // Now do other methods: initInstance.
                 if (d.kind == DefnKind_1.DefnKind.Class) {
                     var cls = d;
-                    //push(d.name + ".initInstance = function(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
-                    push("    static initInstance(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
+                    //push(d.name + ".initInstance = function(SELF) { turbo.Runtime._mem_i32[SELF>>2]=" + cls.classId + "; return SELF; }");
+                    push("    static initInstance(SELF) { turbo.Runtime._mem_i32[SELF>>2]=" + cls.classId + "; return SELF; }");
                 }
                 push("}");
                 if (d.kind == DefnKind_1.DefnKind.Class)
@@ -923,7 +923,7 @@ var Compiler = (function () {
         var line1 = left + expr + s.substring(pp.where);
         var propName = left.match(/[\w]+/gi);
         propName = propName[propName.length - 1];
-        var line2 = "\n        turbo.Runtime._mem_int32[" + propName + " >> 2] = " + array_len + ";";
+        var line2 = "\n        turbo.Runtime._mem_i32[" + propName + " >> 2] = " + array_len + ";";
         return [line1 + line2, left.length + expr.length, array_len];
     };
     Compiler.prototype.expandMacrosIn = function (file, line, text) {

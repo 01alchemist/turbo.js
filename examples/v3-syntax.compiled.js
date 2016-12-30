@@ -1,11 +1,14 @@
-var m_i8;
-var m_i16;
-var m_i32;
-var m_u8;
-var m_u16;
-var m_u32;
-var m_f32;
-var m_f64;
+var unsafe = {
+    mem_i8:new Int8Array(),
+    m_i16:new Int16Array(),
+    m_i32:new Int32Array(),
+    m_u8:new Uint8Array(),
+    m_u16:new Uint16Array(),
+    m_u32:new Uint32Array(),
+    m_f32:new Float32Array(),
+    m_f64:new Float64Array()
+};
+
 var alloc = function (bytes, align) {
 
 };
@@ -14,12 +17,12 @@ MyParallelObject.NAME = "MyParallelObject";
 MyParallelObject.SIZE = 16;
 MyParallelObject.ALIGN = 4;
 MyParallelObject.CLSID = 25480;
-MyParallelObject.init = function (ptr, id) {
-    m_i32[(ptr + 8) >> 2] = id;
+MyParallelObject.internal_init = function (ptr, id) {
+    unsafe.m_i32[(ptr + 8) >> 2] = id;
     return ptr;
 };
-MyParallelObject.initInstance = function (ptr) {
-    m_i32[ptr >> 2] = MyParallelObject.CLSID;
+MyParallelObject.internal_initInstance = function (ptr) {
+    unsafe.m_i32[ptr >> 2] = MyParallelObject.CLSID;
     return ptr;
 };
 MyParallelObject.new = function (id) {

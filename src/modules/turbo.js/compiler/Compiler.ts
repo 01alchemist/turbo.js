@@ -442,7 +442,7 @@ export class Compiler {
                 let body = m.body;
                 for (let k = 0; k < body.length; k++) {
                     let [result, _] = this.myExec(t.file, t.line, self_setter_re,
-                        (file:string, line:number, s:string, p:number, m:RegExpExecArray):any => {
+                        (file:string, line:number, s:string, p:number, m:RegExpExecArray):[string,number] => {
                             if (p > 0 && this.isSubsequent(s.charAt(p - 1))) return [s, p + m.length];
                             return this.replaceSetterShorthand(file, line, s, p, m, t);
                         },
@@ -624,7 +624,7 @@ export class Compiler {
                         emitLine = d.line;
                         let signature = virtual.signature();
                         push("    static " + virtual.name + "(SELF " + signature + ") {");
-                        push("        switch (turbo.Runtime._mem_int32[SELF>>2]) {");
+                        push("        switch (turbo.Runtime._mem_i32[SELF>>2]) {");
                         let kv = virtual.reverseCases.keysValues();
                         for (let [name,cases]=kv.next(); name; [name, cases] = kv.next()) {
                             for (let c of cases)
@@ -644,8 +644,8 @@ export class Compiler {
 
                 if (d.kind == DefnKind.Class) {
                     let cls = <ClassDefn> d;
-                    //push(d.name + ".initInstance = function(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
-                    push("    static initInstance(SELF) { turbo.Runtime._mem_int32[SELF>>2]=" + cls.classId + "; return SELF; }");
+                    //push(d.name + ".initInstance = function(SELF) { turbo.Runtime._mem_i32[SELF>>2]=" + cls.classId + "; return SELF; }");
+                    push("    static initInstance(SELF) { turbo.Runtime._mem_i32[SELF>>2]=" + cls.classId + "; return SELF; }");
                 }
 
                 push("}");
@@ -1000,8 +1000,8 @@ export class Compiler {
         let expr = `turbo.Runtime.allocOrThrow( 4 + ( ${t.elementSize} * ${array_len} ), ${t.elementAlign} ) /*Array*/`;
         let line1 = left + expr + s.substring(pp.where);
         let propName = left.match(/[\w]+/gi);
-        let _propName = propName[propName.length-1];
-        let line2 = `\n        turbo.Runtime._mem_int32[${_propName} >> 2] = ${array_len};`;
+        propName = propName[propName.length-1];
+        let line2 = `\n        turbo.Runtime._mem_i32[${propName} >> 2] = ${array_len};`;
         return [line1 + line2, left.length + expr.length, array_len];
     }
 
