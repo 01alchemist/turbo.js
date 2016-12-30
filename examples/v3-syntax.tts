@@ -8,6 +8,8 @@ type uint8 = number;
 type uint16 = number;
 type uint32 = number;
 
+function turbo() {}
+
 export class TurboObject {
     SIZE: number;
     ALIGN: number;
@@ -62,7 +64,4 @@ export class Mesh{
     constructor(public triangles: Triangle[]) {
 
     }
-}
-
-function turbo() {
 }

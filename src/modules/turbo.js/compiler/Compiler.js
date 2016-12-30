@@ -86,29 +86,29 @@ var Compiler = (function () {
         }
     };
     Compiler.prototype.buildTypeMap = function (sourceProvider) {
-        this.knownTypes.put("int8", new PrimitiveDefn_1.PrimitiveDefn("int8", 1, 1));
-        this.knownTypes.put("uint8", new PrimitiveDefn_1.PrimitiveDefn("uint8", 1, 1));
-        this.knownTypes.put("int16", new PrimitiveDefn_1.PrimitiveDefn("int16", 2, 2));
-        this.knownTypes.put("uint16", new PrimitiveDefn_1.PrimitiveDefn("uint16", 2, 2));
-        this.knownTypes.put("int32", new PrimitiveDefn_1.PrimitiveDefn("int32", 4, 4));
-        this.knownTypes.put("uint32", new PrimitiveDefn_1.PrimitiveDefn("uint32", 4, 4));
-        this.knownTypes.put("atomic/int8", new AtomicDefn_1.AtomicDefn("atomic/int8", 1, 1));
-        this.knownTypes.put("atomic/uint8", new AtomicDefn_1.AtomicDefn("atomic/uint8", 1, 1));
-        this.knownTypes.put("atomic/int16", new AtomicDefn_1.AtomicDefn("atomic/int16", 2, 2));
-        this.knownTypes.put("atomic/uint16", new AtomicDefn_1.AtomicDefn("atomic/uint16", 2, 2));
-        this.knownTypes.put("atomic/int32", new AtomicDefn_1.AtomicDefn("atomic/int32", 4, 4));
-        this.knownTypes.put("atomic/uint32", new AtomicDefn_1.AtomicDefn("atomic/uint32", 4, 4));
-        this.knownTypes.put("synchronic/int8", new SynchronicDefn_1.SynchronicDefn("synchronic/int8", 12, 4, 1));
-        this.knownTypes.put("synchronic/uint8", new SynchronicDefn_1.SynchronicDefn("synchronic/uint8", 12, 4, 1));
-        this.knownTypes.put("synchronic/int16", new SynchronicDefn_1.SynchronicDefn("synchronic/int16", 12, 4, 2));
-        this.knownTypes.put("synchronic/uint16", new SynchronicDefn_1.SynchronicDefn("synchronic/uint16", 12, 4, 2));
-        this.knownTypes.put("synchronic/int32", new SynchronicDefn_1.SynchronicDefn("synchronic/int32", 12, 4, 4));
-        this.knownTypes.put("synchronic/uint32", new SynchronicDefn_1.SynchronicDefn("synchronic/uint32", 12, 4, 4));
-        this.knownTypes.put("float32", new PrimitiveDefn_1.PrimitiveDefn("float32", 4, 4));
-        this.knownTypes.put("float64", new PrimitiveDefn_1.PrimitiveDefn("float64", 8, 8));
-        this.knownTypes.put("int32x4", new SIMDDefn_1.SIMDDefn("int32x4", 16, 16, 4));
-        this.knownTypes.put("float32x4", new SIMDDefn_1.SIMDDefn("float32x4", 16, 16, 4));
-        this.knownTypes.put("float64x2", new SIMDDefn_1.SIMDDefn("float64x2", 16, 16, 8));
+        this.knownTypes.put("int8", new PrimitiveDefn_1.PrimitiveDefn("i8", 1, 1));
+        this.knownTypes.put("uint8", new PrimitiveDefn_1.PrimitiveDefn("u8", 1, 1));
+        this.knownTypes.put("int16", new PrimitiveDefn_1.PrimitiveDefn("i16", 2, 2));
+        this.knownTypes.put("uint16", new PrimitiveDefn_1.PrimitiveDefn("u16", 2, 2));
+        this.knownTypes.put("int32", new PrimitiveDefn_1.PrimitiveDefn("i32", 4, 4));
+        this.knownTypes.put("uint32", new PrimitiveDefn_1.PrimitiveDefn("u32", 4, 4));
+        this.knownTypes.put("atomic/int8", new AtomicDefn_1.AtomicDefn("atomic/i8", 1, 1));
+        this.knownTypes.put("atomic/uint8", new AtomicDefn_1.AtomicDefn("atomic/u8", 1, 1));
+        this.knownTypes.put("atomic/int16", new AtomicDefn_1.AtomicDefn("atomic/i16", 2, 2));
+        this.knownTypes.put("atomic/uint16", new AtomicDefn_1.AtomicDefn("atomic/u16", 2, 2));
+        this.knownTypes.put("atomic/int32", new AtomicDefn_1.AtomicDefn("atomic/i32", 4, 4));
+        this.knownTypes.put("atomic/uint32", new AtomicDefn_1.AtomicDefn("atomic/u32", 4, 4));
+        this.knownTypes.put("synchronic/int8", new SynchronicDefn_1.SynchronicDefn("synchronic/i8", 12, 4, 1));
+        this.knownTypes.put("synchronic/uint8", new SynchronicDefn_1.SynchronicDefn("synchronic/u8", 12, 4, 1));
+        this.knownTypes.put("synchronic/int16", new SynchronicDefn_1.SynchronicDefn("synchronic/i16", 12, 4, 2));
+        this.knownTypes.put("synchronic/uint16", new SynchronicDefn_1.SynchronicDefn("synchronic/u16", 12, 4, 2));
+        this.knownTypes.put("synchronic/int32", new SynchronicDefn_1.SynchronicDefn("synchronic/i32", 12, 4, 4));
+        this.knownTypes.put("synchronic/uint32", new SynchronicDefn_1.SynchronicDefn("synchronic/u32", 12, 4, 4));
+        this.knownTypes.put("float32", new PrimitiveDefn_1.PrimitiveDefn("f32", 4, 4));
+        this.knownTypes.put("float64", new PrimitiveDefn_1.PrimitiveDefn("f64", 8, 8));
+        this.knownTypes.put("int32x4", new SIMDDefn_1.SIMDDefn("i32x4", 16, 16, 4));
+        this.knownTypes.put("float32x4", new SIMDDefn_1.SIMDDefn("f32x4", 16, 16, 4));
+        this.knownTypes.put("float64x2", new SIMDDefn_1.SIMDDefn("f64x2", 16, 16, 8));
         for (var _i = 0, _a = sourceProvider.allSources; _i < _a.length; _i++) {
             var source = _a[_i];
             for (var _b = 0, _c = source.defs; _b < _c.length; _b++) {
@@ -576,7 +576,7 @@ var Compiler = (function () {
                         emitLine = d.line;
                         var signature = virtual.signature();
                         push("    static " + virtual.name + "(SELF " + signature + ") {");
-                        push("        switch (turbo.Runtime._mem_i32[SELF>>2]) {");
+                        push("        switch (unsafe._mem_i32[SELF>>2]) {");
                         var kv = virtual.reverseCases.keysValues();
                         for (var _o = kv.next(), name_2 = _o[0], cases = _o[1]; name_2; (_p = kv.next(), name_2 = _p[0], cases = _p[1], _p)) {
                             for (var _q = 0, cases_1 = cases; _q < cases_1.length; _q++) {
@@ -588,7 +588,7 @@ var Compiler = (function () {
                         push("            default:");
                         push("              " + (virtual.default_ ?
                             "return " + virtual.default_ + "(SELF " + signature + ")" :
-                            "throw turbo.Runtime._badType(SELF)") + ";");
+                            "throw unsafe._badType(SELF)") + ";");
                         push("        }");
                         push("    }");
                     }
@@ -596,12 +596,12 @@ var Compiler = (function () {
                 // Now do other methods: initInstance.
                 if (d.kind == DefnKind_1.DefnKind.Class) {
                     var cls = d;
-                    //push(d.name + ".initInstance = function(SELF) { turbo.Runtime._mem_i32[SELF>>2]=" + cls.classId + "; return SELF; }");
-                    push("    static initInstance(SELF) { turbo.Runtime._mem_i32[SELF>>2]=" + cls.classId + "; return SELF; }");
+                    //push(d.name + ".initInstance = function(SELF) { unsafe._mem_i32[SELF>>2]=" + cls.classId + "; return SELF; }");
+                    push("    static initInstance(SELF) { unsafe._mem_i32[SELF>>2]=" + cls.classId + "; return SELF; }");
                 }
                 push("}");
                 if (d.kind == DefnKind_1.DefnKind.Class)
-                    push("turbo.Runtime._idToType[" + d.classId + "] = " + d.name + ";");
+                    push("unsafe._idToType[" + d.classId + "] = " + d.name + ";");
             }
             while (k < lines.length)
                 nlines.push(lines[k++]);
@@ -727,22 +727,22 @@ var Compiler = (function () {
             switch (operation) {
                 case "get":
                     if (atomic || synchronic)
-                        expr = "Atomics.load(turbo.Runtime." + mem + ", " + fieldIndex + ")";
+                        expr = "Atomics.load(unsafe." + mem + ", " + fieldIndex + ")";
                     else if (simd)
-                        expr = "SIMD." + simdType + ".load(turbo.Runtime." + mem + ", " + fieldIndex + ")";
+                        expr = "SIMD." + simdType + ".load(unsafe." + mem + ", " + fieldIndex + ")";
                     else
-                        expr = "turbo.Runtime." + mem + "[" + fieldIndex + "]";
+                        expr = "unsafe." + mem + "[" + fieldIndex + "]";
                     break;
                 case "len":
                     if (atomic || synchronic)
-                        expr = "Atomics.load(turbo.Runtime." + mem + ", " + fieldIndex + ")";
+                        expr = "Atomics.load(unsafe." + mem + ", " + fieldIndex + ")";
                     else if (simd)
-                        expr = "SIMD." + simdType + ".load(turbo.Runtime." + mem + ", " + fieldIndex + ")";
+                        expr = "SIMD." + simdType + ".load(unsafe." + mem + ", " + fieldIndex + ")";
                     else
-                        expr = "turbo.Runtime." + mem + "[" + fieldIndex + "]";
+                        expr = "unsafe." + mem + "[" + fieldIndex + "]";
                     break;
                 case "notify":
-                    expr = "turbo.Runtime." + CONST_1.OpAttr[operation].synchronic + "(" + ref + ")";
+                    expr = "unsafe." + CONST_1.OpAttr[operation].synchronic + "(" + ref + ")";
                     break;
                 case "set":
                 case "add":
@@ -753,34 +753,34 @@ var Compiler = (function () {
                 case "loadWhenEqual":
                 case "loadWhenNotEqual":
                     if (atomic) {
-                        expr = "Atomics." + CONST_1.OpAttr[operation].atomic + "(turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
+                        expr = "Atomics." + CONST_1.OpAttr[operation].atomic + "(unsafe." + mem + ", " + fieldIndex + ", " + rhs + ")";
                     }
                     else if (synchronic) {
-                        expr = "turbo.Runtime." + CONST_1.OpAttr[operation].synchronic + "(" + ref + ", turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
+                        expr = "unsafe." + CONST_1.OpAttr[operation].synchronic + "(" + ref + ", unsafe." + mem + ", " + fieldIndex + ", " + rhs + ")";
                     }
                     else if (simd) {
-                        expr = "SIMD." + simdType + ".store(turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ")";
+                        expr = "SIMD." + simdType + ".store(unsafe." + mem + ", " + fieldIndex + ", " + rhs + ")";
                     }
                     else {
-                        expr = "turbo.Runtime." + mem + "[" + ref + " >> " + shift + "] " + CONST_1.OpAttr[operation].vanilla + " " + rhs;
+                        expr = "unsafe." + mem + "[" + ref + " >> " + shift + "] " + CONST_1.OpAttr[operation].vanilla + " " + rhs;
                         if (arrayLength && arrayLength != "-1") {
                             // let _ref = ref.substr(0,ref.length-1);
                             // let _tmp = _ref.substr(_ref.lastIndexOf(" "), _ref.length);
                             // _ref = _ref.substr(0, _ref.lastIndexOf(" "));
                             // let _ref_shift = parseInt(_tmp) + 4;
                             // _ref = _ref + " " +_ref_shift;
-                            // expr += `\n\tturbo.Runtime.${mem}[${_ref}) >> ${shift}] = ${arrayLength}`;
+                            // expr += `\n\tunsafe.${mem}[${_ref}) >> ${shift}] = ${arrayLength}`;
                             // arrayLength = eval(arrayLength);
-                            expr += "\n        turbo.Runtime." + mem + "[(turbo.Runtime." + mem + "[" + ref + " >> 2]) >> 2] = " + arrayLength;
+                            expr += "\n        unsafe." + mem + "[(unsafe." + mem + "[" + ref + " >> 2]) >> 2] = " + arrayLength;
                         }
                     }
                     break;
                 case "compareExchange":
                 case "expectUpdate":
                     if (atomic)
-                        expr = "Atomics." + CONST_1.OpAttr[operation].atomic + "(turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ", " + rhs2 + ")";
+                        expr = "Atomics." + CONST_1.OpAttr[operation].atomic + "(unsafe." + mem + ", " + fieldIndex + ", " + rhs + ", " + rhs2 + ")";
                     else
-                        expr = "turbo.Runtime." + CONST_1.OpAttr[operation].synchronic + "(" + ref + ", turbo.Runtime." + mem + ", " + fieldIndex + ", " + rhs + ", " + rhs2 + ")";
+                        expr = "unsafe." + CONST_1.OpAttr[operation].synchronic + "(" + ref + ", unsafe." + mem + ", " + fieldIndex + ", " + rhs + ", " + rhs2 + ")";
                     break;
                 default:
                     throw new InternalError_1.InternalError("No operator: " + operation + " line: " + s);
@@ -898,7 +898,7 @@ var Compiler = (function () {
         if (!t)
             throw new ProgramError_1.ProgramError(file, line, "Unknown type argument to @new: " + baseType);
         if (!isArray) {
-            var expr_1 = "turbo.Runtime.allocOrThrow(" + t.size + "," + t.align + ")";
+            var expr_1 = "unsafe.alloc(" + t.size + "," + t.align + ")";
             if (t.kind == DefnKind_1.DefnKind.Class) {
                 // NOTE, parens removed here
                 // Issue #16: Watch it: Parens interact with semicolon insertion.
@@ -915,15 +915,15 @@ var Compiler = (function () {
         // Issue #16: Watch it: Parens interact with semicolon insertion.
         //Array
         //Change(6-10-16) : Added array length in header
-        //let expr = "turbo.Runtime.allocOrThrow( (" + t.elementSize + " * " + this.expandMacrosIn(file, line, endstrip(as[0])) + "), " + t.elementAlign + ") /*Array*/";
+        //let expr = "unsafe.alloc( (" + t.elementSize + " * " + this.expandMacrosIn(file, line, endstrip(as[0])) + "), " + t.elementAlign + ") /*Array*/";
         var array_len = this.expandMacrosIn(file, line, index_1.endstrip(as[0]))[0];
-        // let expr = `turbo.Runtime.allocOrThrow( 4 + ( ${t.elementSize} * ${array_len} ), ${t.elementAlign}) /*Array*/`;
+        // let expr = `unsafe.alloc( 4 + ( ${t.elementSize} * ${array_len} ), ${t.elementAlign}) /*Array*/`;
         // let arraySize = eval(`4 + ( ${t.elementSize} * ${array_len} )`);
-        var expr = "turbo.Runtime.allocOrThrow( 4 + ( " + t.elementSize + " * " + array_len + " ), " + t.elementAlign + " ) /*Array*/";
+        var expr = "unsafe.alloc( 4 + ( " + t.elementSize + " * " + array_len + " ), " + t.elementAlign + " ) /*Array*/";
         var line1 = left + expr + s.substring(pp.where);
         var propName = left.match(/[\w]+/gi);
         propName = propName[propName.length - 1];
-        var line2 = "\n        turbo.Runtime._mem_i32[" + propName + " >> 2] = " + array_len + ";";
+        var line2 = "\n        unsafe._mem_i32[" + propName + " >> 2] = " + array_len + ";";
         return [line1 + line2, left.length + expr.length, array_len];
     };
     Compiler.prototype.expandMacrosIn = function (file, line, text) {
